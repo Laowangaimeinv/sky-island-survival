@@ -1,0 +1,13 @@
+{
+  "wild_beasts": [
+    {"id": "rat", "name": "巨鼠", "hp": 15, "atk": 3, "def": 1, "exp": 5, "drops": {"meat": [1, 0.8]}, "desc": "空岛上最常见的小兽"},
+    {"id": "wolf", "name": "灰狼", "hp": 35, "atk": 8, "def": 3, "exp": 15, "drops": {"meat": [2, 0.9], "leather": [1, 0.6]}, "desc": "成群出没的危险野兽"},
+    {"id": "boar", "name": "铁背野猪", "hp": 50, "atk": 12, "def": 6, "exp": 25, "drops": {"meat": [3, 1.0], "leather": [2, 0.7]}, "desc": "皮糙肉厚的大型野兽"},
+    {"id": "eagle", "name": "虚空鹰", "hp": 30, "atk": 15, "def": 2, "exp": 20, "drops": {"feather": [3, 0.9]}, "desc": "在空岛间翱翔的猛禽"}
+  ],
+  "island_guardians": [
+    {"id": "guardian_1", "name": "石像守卫", "hp": 80, "atk": 10, "def": 10, "exp": 50, "drops": {"stone": [10, 1.0], "crystal": [1, 0.5]}, "desc": "第一座空岛的守护者", "island_level": 1},
+    {"id": "guardian_2", "name": "铁甲巨熊", "hp": 150, "atk": 18, "def": 12, "exp": 100, "drops": {"iron_ore": [8, 1.0], "crystal": [2, 0.6]}, "desc": "守护矿脉的巨兽", "island_level": 2},
+    {"id": "guardian_3", "name": "水晶飞龙", "hp": 250, "atk": 25, "def": 15, "exp": 200, "drops": {"crystal": [5, 1.0], "void_stone": [1, 0.4]}, "desc": "盘踞在水晶岛上的飞龙", "island_level": 3}
+  ]
+}

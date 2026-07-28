@@ -1,0 +1,109 @@
+{
+  "resources": {
+    "wood": {"name": "木材", "desc": "普通木材，基础建筑材料", "stackable": true, "max_stack": 99, "grade": "F"},
+    "stone": {"name": "石头", "desc": "坚硬的石头", "stackable": true, "max_stack": 99, "grade": "F"},
+    "fiber": {"name": "植物纤维", "desc": "从野草中提取的纤维", "stackable": true, "max_stack": 99, "grade": "F"},
+    "iron_ore": {"name": "铁矿石", "desc": "含有铁元素的矿石", "stackable": true, "max_stack": 99, "grade": "E"},
+    "crystal": {"name": "空岛水晶", "desc": "蕴含空岛能量的水晶，用于岛屿融合", "stackable": true, "max_stack": 10, "grade": "C"},
+    "herb": {"name": "草药", "desc": "可入药的植物", "stackable": true, "max_stack": 50, "grade": "F"},
+    "meat": {"name": "生肉", "desc": "从野兽身上获取", "stackable": true, "max_stack": 20, "grade": "F"},
+    "leather": {"name": "皮革", "desc": "兽皮，可用于制作护甲", "stackable": true, "max_stack": 50, "grade": "E"},
+    "feather": {"name": "羽毛", "desc": "轻盈的羽毛", "stackable": true, "max_stack": 50, "grade": "E"},
+    "void_stone": {"name": "虚空石", "desc": "来自虚空深处的神秘石头", "stackable": true, "max_stack": 5, "grade": "A"},
+    "wheat_seed": {"name": "小麦种子", "desc": "可以种植，成熟后收获小麦", "stackable": true, "max_stack": 50, "grade": "F", "type": "seed", "growth_time": 12, "stages": 4, "harvest_id": "wheat", "harvest_amount": [3, 6]},
+    "wheat": {"name": "小麦", "desc": "可食用或制作面粉", "stackable": true, "max_stack": 50, "grade": "F"},
+    "herb_seed": {"name": "草药种子", "desc": "种植草药", "stackable": true, "max_stack": 50, "grade": "E", "type": "seed", "growth_time": 18, "stages": 4, "harvest_id": "herb", "harvest_amount": [2, 4]},
+    "crystal_seed": {"name": "水晶种子", "desc": "种植水晶花，极稀有", "stackable": true, "max_stack": 10, "grade": "C", "type": "seed", "growth_time": 36, "stages": 6, "harvest_id": "crystal", "harvest_amount": [1, 2]}
+  },
+  "tools": {
+    "stone_axe": {"name": "石斧", "desc": "基础伐木工具", "type": "tool", "tool_type": "axe", "power": 2, "durability": 30, "grade": "F"},
+    "stone_pickaxe": {"name": "石镐", "desc": "基础采矿工具", "type": "tool", "tool_type": "pickaxe", "power": 2, "durability": 30, "grade": "F"},
+    "iron_axe": {"name": "铁斧", "desc": "更高效的伐木工具", "type": "tool", "tool_type": "axe", "power": 5, "durability": 80, "grade": "E"},
+    "iron_pickaxe": {"name": "铁镐", "desc": "更高效的采矿工具", "type": "tool", "tool_type": "pickaxe", "power": 5, "durability": 80, "grade": "E"},
+    "crystal_axe": {"name": "水晶斧", "desc": "高效的伐木工具", "type": "tool", "tool_type": "axe", "power": 10, "durability": 200, "grade": "C"},
+    "crystal_pickaxe": {"name": "水晶镐", "desc": "高效的采矿工具", "type": "tool", "tool_type": "pickaxe", "power": 10, "durability": 200, "grade": "C"},
+    "fishing_rod": {"name": "钓竿", "desc": "可在空岛边缘垂钓", "type": "tool", "tool_type": "fishing", "power": 1, "durability": 50, "grade": "F"}
+  },
+  "weapons": {
+    "wooden_sword": {"name": "木剑", "desc": "最基础的武器", "type": "weapon", "atk": 3, "durability": 20, "grade": "F"},
+    "stone_sword": {"name": "石剑", "desc": "比木剑稍强", "type": "weapon", "atk": 5, "durability": 40, "grade": "F"},
+    "iron_sword": {"name": "铁剑", "desc": "可靠的武器", "type": "weapon", "atk": 10, "durability": 80, "grade": "E"},
+    "crystal_blade": {"name": "水晶刃", "desc": "蕴含空岛之力", "type": "weapon", "atk": 18, "durability": 120, "grade": "C"},
+    "void_sword": {"name": "虚空之刃", "desc": "虚空之力凝聚的剑", "type": "weapon", "atk": 30, "durability": 200, "grade": "A"},
+    "iron_hammer": {"name": "铁锤", "desc": "重型武器，暴击伤害高", "type": "weapon", "atk": 14, "durability": 100, "grade": "E", "crit_damage_mult": 1.5},
+    "crystal_bow": {"name": "水晶弓", "desc": "远程武器，暴击率高", "type": "weapon", "atk": 15, "durability": 100, "grade": "C", "crit_chance": 0.10, "ranged": true}
+  },
+  "armor": {
+    "leather_armor": {"name": "皮甲", "desc": "轻便的护甲", "type": "armor", "def": 3, "durability": 40, "grade": "F"},
+    "iron_armor": {"name": "铁甲", "desc": "坚固的护甲", "type": "armor", "def": 8, "durability": 100, "grade": "E"},
+    "crystal_armor": {"name": "水晶甲", "desc": "空岛能量护甲", "type": "armor", "def": 15, "durability": 150, "grade": "C"},
+    "void_armor": {"name": "虚空甲", "desc": "虚空之力构成的护甲", "type": "armor", "def": 25, "durability": 250, "grade": "A"},
+    "leather_hat": {"name": "皮帽", "desc": "轻便的头盔", "type": "armor", "slot": "head", "def": 1, "durability": 30, "grade": "F"},
+    "iron_helmet": {"name": "铁盔", "desc": "坚固的头盔", "type": "armor", "slot": "head", "def": 4, "durability": 80, "grade": "E"},
+    "crystal_helmet": {"name": "水晶头盔", "desc": "水晶打造的头盔", "type": "armor", "slot": "head", "def": 8, "durability": 150, "grade": "C"}
+  },
+  "consumables": {
+    "cooked_meat": {"name": "烤肉", "desc": "恢复30点饱食度", "type": "food", "hunger_restore": 30, "grade": "F"},
+    "herb_potion": {"name": "草药汁", "desc": "恢复20点生命", "type": "potion", "heal": 20, "grade": "F"},
+    "crystal_potion": {"name": "水晶药剂", "desc": "恢复50点生命", "type": "potion", "heal": 50, "grade": "C"},
+    "bandage": {"name": "绷带", "desc": "恢复10点生命", "type": "potion", "heal": 10, "grade": "F"},
+    "mana_potion": {"name": "魔力药水", "desc": "恢复30点MP", "type": "potion", "mana_restore": 30, "grade": "E"},
+    "greater_mana_potion": {"name": "高级魔力药水", "desc": "恢复60点MP", "type": "potion", "mana_restore": 60, "grade": "C"},
+    "bread": {"name": "面包", "desc": "恢复15点饱食度", "type": "food", "hunger_restore": 15, "grade": "F"},
+    "stew": {"name": "炖肉", "desc": "恢复50点饱食度和10点HP", "type": "food", "hunger_restore": 50, "heal": 10, "grade": "E"}
+  },
+  "fishing_rods": {
+    "wood_rod": {"name": "木钓竿", "desc": "最基础的钓竿", "type": "tool", "tool_type": "fishing", "tier_bonus": 0, "durability": 30, "grade": "F"},
+    "iron_rod": {"name": "铁钓竿", "desc": "更容易钓到好东西", "type": "tool", "tool_type": "fishing", "tier_bonus": 1, "durability": 80, "grade": "E"},
+    "crystal_rod": {"name": "水晶钓竿", "desc": "稀有宝箱概率+50%", "type": "tool", "tool_type": "fishing", "tier_bonus": 2, "durability": 150, "grade": "C"},
+    "void_rod": {"name": "虚空钓竿", "desc": "可钓到虚空黑箱", "type": "tool", "tool_type": "fishing", "tier_bonus": 3, "durability": 300, "grade": "A"},
+    "mythic_rod": {"name": "神话钓竿", "desc": "永不损坏，最高品质", "type": "tool", "tool_type": "fishing", "tier_bonus": 4, "durability": -1, "grade": "S"}
+  },
+  "baits": {
+    "basic_bait": {"name": "基础钓饵", "tier_bonus": 0, "desc": "普通的钓饵", "grade": "F"},
+    "ore_bait": {"name": "矿石钓饵", "tier_bonus": 1, "desc": "矿物类掉落+20%", "grade": "E"},
+    "crystal_bait": {"name": "水晶钓饵", "tier_bonus": 2, "desc": "水晶类掉落+30%", "grade": "C"},
+    "void_bait": {"name": "虚空钓饵", "tier_bonus": 3, "desc": "虚空物品概率+50%", "grade": "A"}
+  },
+  "special": {
+    "profession_scroll_warrior": {"name": "战士转职卷轴", "desc": "使用后转职为战士", "type": "profession_scroll", "profession_id": "warrior", "grade": "F", "stackable": false},
+    "profession_scroll_mage": {"name": "法师转职卷轴", "desc": "使用后转职为法师", "type": "profession_scroll", "profession_id": "mage", "grade": "F", "stackable": false},
+    "profession_scroll_ranger": {"name": "游侠转职卷轴", "desc": "使用后转职为游侠", "type": "profession_scroll", "profession_id": "ranger", "grade": "F", "stackable": false},
+    "profession_scroll_crafter": {"name": "工匠转职卷轴", "desc": "使用后转职为工匠", "type": "profession_scroll", "profession_id": "crafter", "grade": "D", "stackable": false},
+    "profession_scroll_gatherer": {"name": "采集者转职卷轴", "desc": "使用后转职为采集者", "type": "profession_scroll", "profession_id": "gatherer", "grade": "D", "stackable": false},
+    "profession_scroll_paladin": {"name": "圣骑士转职卷轴", "desc": "使用后转职为圣骑士", "type": "profession_scroll", "profession_id": "paladin", "grade": "C", "stackable": false},
+    "profession_scroll_assassin": {"name": "刺客转职卷轴", "desc": "使用后转职为刺客", "type": "profession_scroll", "profession_id": "assassin", "grade": "C", "stackable": false},
+    "profession_scroll_berserker": {"name": "狂战士转职卷轴", "desc": "使用后转职为狂战士", "type": "profession_scroll", "profession_id": "berserker", "grade": "B", "stackable": false},
+    "profession_scroll_archmage": {"name": "大法师转职卷轴", "desc": "使用后转职为大法师", "type": "profession_scroll", "profession_id": "archmage", "grade": "B", "stackable": false},
+    "profession_scroll_void_knight": {"name": "虚空骑士转职卷轴", "desc": "使用后转职为虚空骑士", "type": "profession_scroll", "profession_id": "void_knight", "grade": "A", "stackable": false},
+    "profession_scroll_elementalist": {"name": "元素使转职卷轴", "desc": "使用后转职为元素使", "type": "profession_scroll", "profession_id": "elementalist", "grade": "A", "stackable": false},
+    "profession_scroll_god_of_war": {"name": "战神转职卷轴", "desc": "使用后转职为战神", "type": "profession_scroll", "profession_id": "god_of_war", "grade": "S", "stackable": false},
+    "profession_scroll_arcane_lord": {"name": "奥术之主转职卷轴", "desc": "使用后转职为奥术之主", "type": "profession_scroll", "profession_id": "arcane_lord", "grade": "S", "stackable": false},
+    "island_crystal": {"name": "空岛水晶", "desc": "用于岛屿融合", "stackable": true, "max_stack": 10, "grade": "B"},
+    "talent_stone": {"name": "天赋强化石", "desc": "强化天赋效果", "stackable": true, "max_stack": 5, "grade": "A"},
+    "talent_evolution_stone": {"name": "天赋进化石", "desc": "进化天赋等级", "stackable": true, "max_stack": 3, "grade": "S"},
+    "pet_egg_common": {"name": "普通宠物蛋", "desc": "孵化后获得普通宠物", "grade": "C", "stackable": false},
+    "pet_egg_rare": {"name": "稀有宠物蛋", "desc": "孵化后获得稀有宠物", "grade": "B", "stackable": false},
+    "pet_egg_mythic": {"name": "神话宠物蛋", "desc": "孵化后获得神话宠物", "grade": "S", "stackable": false},
+    "void_core": {"name": "虚空核心", "desc": "蕴含强大虚空之力", "stackable": true, "max_stack": 3, "grade": "S"},
+    "island_fragment": {"name": "岛屿碎片", "desc": "可扩展空岛面积", "stackable": true, "max_stack": 5, "grade": "A"},
+    "building_blueprint": {"name": "建筑蓝图", "desc": "解锁特殊建筑", "grade": "B", "stackable": false},
+    "legendary_blueprint": {"name": "传说建筑蓝图", "desc": "解锁传说建筑", "grade": "A", "stackable": false},
+    "key_blue": {"name": "蓝箱钥匙", "desc": "开启稀有蓝箱", "type": "key", "grade": "E", "stackable": true, "max_stack": 10},
+    "key_silver": {"name": "银箱钥匙", "desc": "开启珍贵银箱", "type": "key", "grade": "D", "stackable": true, "max_stack": 10},
+    "key_gold": {"name": "金箱钥匙", "desc": "开启奢华金箱", "type": "key", "grade": "C", "stackable": true, "max_stack": 10},
+    "key_rainbow": {"name": "彩箱钥匙", "desc": "开启至尊彩箱", "type": "key", "grade": "B", "stackable": true, "max_stack": 5},
+    "key_black": {"name": "黑箱钥匙", "desc": "开启虚空黑箱", "type": "key", "grade": "A", "stackable": true, "max_stack": 3}
+  },
+  "grade_config": {
+    "F":  {"name": "凡品", "color": "⬜", "stat_mult": 1.0},
+    "E":  {"name": "凡品+", "color": "🟩", "stat_mult": 1.1},
+    "D":  {"name": "精良", "color": "🟦", "stat_mult": 1.2},
+    "C":  {"name": "稀有", "color": "🟪", "stat_mult": 1.4},
+    "B":  {"name": "珍贵", "color": "🪙", "stat_mult": 1.6},
+    "A":  {"name": "奢华", "color": "🥇", "stat_mult": 1.8},
+    "S":  {"name": "传说", "color": "🌈", "stat_mult": 2.0},
+    "SS": {"name": "神话", "color": "⭐", "stat_mult": 2.5},
+    "SSS":{"name": "至高", "color": "✨", "stat_mult": 3.0}
+  }
+}

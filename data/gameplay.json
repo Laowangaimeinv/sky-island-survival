@@ -1,0 +1,208 @@
+{
+  "time_config": {
+    "hours_per_day": 24,
+    "days_per_month": 30,
+    "months_per_year": 12,
+    "fishing_base_time": 2,
+    "farming_check_interval": 1
+  },
+  "chest_tiers": {
+    "white": {
+      "name": "普通白箱", "icon": "⬜", "color": "白色",
+      "weight": 45, "key_required": false,
+      "loot_pool": [
+        {"id": "wood", "min": 3, "max": 5, "weight": 30},
+        {"id": "stone", "min": 2, "max": 4, "weight": 30},
+        {"id": "fiber", "min": 2, "max": 3, "weight": 25},
+        {"id": "bandage", "min": 1, "max": 1, "weight": 10},
+        {"id": "bread", "min": 1, "max": 2, "weight": 5}
+      ]
+    },
+    "green": {
+      "name": "精良绿箱", "icon": "🟩", "color": "绿色",
+      "weight": 25, "key_required": false,
+      "loot_pool": [
+        {"id": "herb", "min": 2, "max": 4, "weight": 20},
+        {"id": "meat", "min": 1, "max": 3, "weight": 15},
+        {"id": "leather", "min": 1, "max": 2, "weight": 15},
+        {"id": "iron_ore", "min": 1, "max": 2, "weight": 15},
+        {"id": "stone_axe", "min": 1, "max": 1, "weight": 5},
+        {"id": "stone_pickaxe", "min": 1, "max": 1, "weight": 5},
+        {"id": "wooden_sword", "min": 1, "max": 1, "weight": 5},
+        {"id": "fishing_rod", "min": 1, "max": 1, "weight": 5},
+        {"id": "wheat_seed", "min": 2, "max": 5, "weight": 8},
+        {"id": "key_blue", "min": 1, "max": 1, "weight": 7}
+      ]
+    },
+    "blue": {
+      "name": "稀有蓝箱", "icon": "🟦", "color": "蓝色",
+      "weight": 15, "key_required": true,
+      "key_id": "key_blue",
+      "loot_pool": [
+        {"id": "iron_ore", "min": 3, "max": 6, "weight": 20},
+        {"id": "crystal", "min": 1, "max": 2, "weight": 10},
+        {"id": "leather", "min": 3, "max": 5, "weight": 10},
+        {"id": "iron_sword", "min": 1, "max": 1, "weight": 8},
+        {"id": "leather_armor", "min": 1, "max": 1, "weight": 8},
+        {"id": "herb_potion", "min": 2, "max": 3, "weight": 10},
+        {"id": "crystal_potion", "min": 1, "max": 1, "weight": 8},
+        {"id": "mana_potion", "min": 1, "max": 2, "weight": 8},
+        {"id": "key_silver", "min": 1, "max": 1, "weight": 5},
+        {"id": "herb_seed", "min": 2, "max": 4, "weight": 6},
+        {"id": "profession_scroll_warrior", "min": 1, "max": 1, "weight": 2},
+        {"id": "profession_scroll_mage", "min": 1, "max": 1, "weight": 2},
+        {"id": "profession_scroll_ranger", "min": 1, "max": 1, "weight": 2}
+      ]
+    },
+    "silver": {
+      "name": "珍贵银箱", "icon": "🪙", "color": "银色",
+      "weight": 10, "key_required": true,
+      "key_id": "key_silver",
+      "loot_pool": [
+        {"id": "crystal", "min": 2, "max": 4, "weight": 15},
+        {"id": "iron_ore", "min": 5, "max": 10, "weight": 10},
+        {"id": "void_stone", "min": 1, "max": 1, "weight": 5},
+        {"id": "iron_armor", "min": 1, "max": 1, "weight": 8},
+        {"id": "iron_axe", "min": 1, "max": 1, "weight": 6},
+        {"id": "iron_pickaxe", "min": 1, "max": 1, "weight": 6},
+        {"id": "crystal_blade", "min": 1, "max": 1, "weight": 4},
+        {"id": "crystal_potion", "min": 2, "max": 3, "weight": 8},
+        {"id": "greater_mana_potion", "min": 1, "max": 2, "weight": 6},
+        {"id": "pet_egg_common", "min": 1, "max": 1, "weight": 3},
+        {"id": "island_crystal", "min": 1, "max": 2, "weight": 4},
+        {"id": "key_gold", "min": 1, "max": 1, "weight": 4},
+        {"id": "profession_scroll_crafter", "min": 1, "max": 1, "weight": 3},
+        {"id": "profession_scroll_gatherer", "min": 1, "max": 1, "weight": 3},
+        {"id": "crystal_seed", "min": 1, "max": 2, "weight": 3}
+      ]
+    },
+    "gold": {
+      "name": "奢华金箱", "icon": "🥇", "color": "金色",
+      "weight": 4, "key_required": true,
+      "key_id": "key_gold",
+      "loot_pool": [
+        {"id": "crystal", "min": 4, "max": 8, "weight": 15},
+        {"id": "void_stone", "min": 2, "max": 3, "weight": 10},
+        {"id": "crystal_blade", "min": 1, "max": 1, "weight": 6},
+        {"id": "crystal_armor", "min": 1, "max": 1, "weight": 6},
+        {"id": "crystal_bow", "min": 1, "max": 1, "weight": 4},
+        {"id": "pet_egg_rare", "min": 1, "max": 1, "weight": 5},
+        {"id": "island_crystal", "min": 2, "max": 4, "weight": 10},
+        {"id": "talent_stone", "min": 1, "max": 1, "weight": 6},
+        {"id": "building_blueprint", "min": 1, "max": 1, "weight": 5},
+        {"id": "key_rainbow", "min": 1, "max": 1, "weight": 3},
+        {"id": "profession_scroll_paladin", "min": 1, "max": 1, "weight": 3},
+        {"id": "profession_scroll_assassin", "min": 1, "max": 1, "weight": 3},
+        {"id": "profession_scroll_berserker", "min": 1, "max": 1, "weight": 2},
+        {"id": "profession_scroll_archmage", "min": 1, "max": 1, "weight": 2},
+        {"id": "void_sword", "min": 1, "max": 1, "weight": 2}
+      ]
+    },
+    "rainbow": {
+      "name": "至尊彩箱", "icon": "🌈", "color": "七彩",
+      "weight": 0.9, "key_required": true,
+      "key_id": "key_rainbow",
+      "loot_pool": [
+        {"id": "void_stone", "min": 3, "max": 5, "weight": 15},
+        {"id": "island_crystal", "min": 4, "max": 8, "weight": 15},
+        {"id": "talent_stone", "min": 1, "max": 2, "weight": 10},
+        {"id": "pet_egg_mythic", "min": 1, "max": 1, "weight": 5},
+        {"id": "island_fragment", "min": 1, "max": 1, "weight": 10},
+        {"id": "void_core", "min": 1, "max": 1, "weight": 6},
+        {"id": "legendary_blueprint", "min": 1, "max": 1, "weight": 5},
+        {"id": "key_black", "min": 1, "max": 1, "weight": 4},
+        {"id": "profession_scroll_void_knight", "min": 1, "max": 1, "weight": 3},
+        {"id": "profession_scroll_elementalist", "min": 1, "max": 1, "weight": 3},
+        {"id": "profession_scroll_god_of_war", "min": 1, "max": 1, "weight": 1},
+        {"id": "profession_scroll_arcane_lord", "min": 1, "max": 1, "weight": 1},
+        {"id": "void_armor", "min": 1, "max": 1, "weight": 2},
+        {"id": "crystal_helmet", "min": 1, "max": 1, "weight": 3}
+      ]
+    },
+    "black": {
+      "name": "虚空黑箱", "icon": "⬛", "color": "黑色",
+      "weight": 0.1, "key_required": true,
+      "key_id": "key_black",
+      "loot_pool": [
+        {"id": "void_core", "min": 1, "max": 3, "weight": 20},
+        {"id": "talent_evolution_stone", "min": 1, "max": 1, "weight": 15},
+        {"id": "island_fragment", "min": 2, "max": 3, "weight": 10},
+        {"id": "talent_stone", "min": 2, "max": 3, "weight": 10},
+        {"id": "profession_scroll_god_of_war", "min": 1, "max": 1, "weight": 3},
+        {"id": "profession_scroll_arcane_lord", "min": 1, "max": 1, "weight": 3},
+        {"id": "profession_scroll_void_knight", "min": 1, "max": 1, "weight": 5},
+        {"id": "profession_scroll_elementalist", "min": 1, "max": 1, "weight": 5},
+        {"id": "void_sword", "min": 1, "max": 1, "weight": 4},
+        {"id": "void_armor", "min": 1, "max": 1, "weight": 4}
+      ]
+    }
+  },
+  "profession_drop_rates": {
+    "from_chest": {
+      "white": {},
+      "green": {},
+      "blue": {"F": 0.15},
+      "silver": {"F": 0.30, "D": 0.10},
+      "gold": {"D": 0.25, "C": 0.08},
+      "rainbow": {"C": 0.20, "B": 0.08, "A": 0.03},
+      "black": {"B": 0.15, "A": 0.10, "S": 0.03}
+    }
+  },
+  "fishing_rods": {
+    "wood_rod": {"name": "木钓竿", "tier_bonus": 0, "durability": 30, "desc": "最基础的钓竿"},
+    "iron_rod": {"name": "铁钓竿", "tier_bonus": 1, "durability": 80, "desc": "更容易钓到好东西"},
+    "crystal_rod": {"name": "水晶钓竿", "tier_bonus": 2, "durability": 150, "desc": "稀有宝箱概率+50%"},
+    "void_rod": {"name": "虚空钓竿", "tier_bonus": 3, "durability": 300, "desc": "可钓到虚空黑箱"},
+    "mythic_rod": {"name": "神话钓竿", "tier_bonus": 4, "durability": -1, "desc": "永不损坏，最高品质"}
+  },
+  "baits": {
+    "basic_bait": {"name": "基础钓饵", "tier_bonus": 0, "desc": "普通的钓饵"},
+    "ore_bait": {"name": "矿石钓饵", "tier_bonus": 1, "desc": "矿物类掉落+20%"},
+    "crystal_bait": {"name": "水晶钓饵", "tier_bonus": 2, "desc": "水晶类掉落+30%"},
+    "void_bait": {"name": "虚空钓饵", "tier_bonus": 3, "desc": "虚空物品概率+50%"}
+  },
+  "weather_types": {
+    "sunny": {"name": "☀️ 晴天", "effects": {}, "duration": [1, 3]},
+    "rainy": {"name": "🌧️ 雨天", "effects": {"gather_bonus": 0.20, "fire_extinguish": true}, "duration": [1, 3]},
+    "foggy": {"name": "🌫️ 大雾", "effects": {"scout_range_mult": 0.70, "encounter_bonus": 0.20}, "duration": [1, 1]},
+    "stormy": {"name": "⛈️ 雷暴", "effects": {"building_damage_chance": 0.10, "metal_danger": true}, "duration": [1, 1]},
+    "cold": {"name": "❄️ 寒潮", "effects": {"hunger_decay_mult": 1.50, "need_warmth": true}, "duration": [2, 3]},
+    "void_storm": {"name": "🌀 虚空风暴", "effects": {"island_shrink": true, "void_spawn": true, "gather_mult": 0.50}, "duration": [3, 3]}
+  },
+  "disaster_types": [
+    {"id": "rat_swarm", "name": "🐀 鼠潮", "min_day": 8, "creatures": [{"id": "rat", "count": [5, 8]}], "reward_exp": 30},
+    {"id": "wolf_pack", "name": "🐺 狼群围攻", "min_day": 15, "creatures": [{"id": "wolf", "count": [3, 5]}], "reward_exp": 80},
+    {"id": "goblin_raid", "name": "👹 哥布林突袭", "min_day": 22, "creatures": [{"id": "wolf", "count": [2, 3]}, {"id": "boar", "count": [2, 3]}], "reward_exp": 150},
+    {"id": "undead_tide", "name": "🧟 亡灵潮", "min_day": 30, "creatures": [{"id": "guardian_1", "count": [1, 2]}, {"id": "wolf", "count": [4, 6]}], "reward_exp": 300},
+    {"id": "void_beast", "name": "🐉 虚空巨兽入侵", "min_day": 45, "creatures": [{"id": "guardian_3", "count": [1, 1]}, {"id": "boar", "count": [3, 5]}], "reward_exp": 500}
+  ],
+  "combat_random_events": [
+    {"id": "ambush_reinforce", "name": "敌人增援", "desc": "更多敌人从暗处涌出！", "chance": 0.15, "effect": "spawn_extra", "extra_count": [1, 2]},
+    {"id": "lucky_strike", "name": "幸运一击", "desc": "你发现了敌人的破绽！", "chance": 0.10, "effect": "bonus_damage", "damage_mult": 2.0},
+    {"id": "treasure_drop", "name": "战利品", "desc": "敌人身上掉落了宝箱！", "chance": 0.08, "effect": "drop_chest", "chest_tier": "green"},
+    {"id": "environment_help", "name": "环境助力", "desc": "周围的环境帮了你一把！", "chance": 0.12, "effect": "heal", "heal_percent": 0.15},
+    {"id": "enemy_flee", "name": "敌人逃跑", "desc": "部分敌人被吓跑了！", "chance": 0.10, "effect": "enemy_flee", "flee_percent": 0.30},
+    {"id": "critical_moment", "name": "关键时刻", "desc": "你爆发出了强大的力量！", "chance": 0.08, "effect": "atk_boost", "atk_mult": 1.5, "duration": 2},
+    {"id": "trap_trigger", "name": "触发陷阱", "desc": "你踩到了陷阱！", "chance": 0.10, "effect": "player_damage", "damage": [5, 15]},
+    {"id": "supply_drop", "name": "空投补给", "desc": "天空中掉下了补给箱！", "chance": 0.05, "effect": "drop_chest", "chest_tier": "blue"},
+    {"id": "void_whisper", "name": "虚空低语", "desc": "虚空的声音在你耳边回响...", "chance": 0.03, "effect": "random_buff", "buff_options": ["atk_up", "def_up", "heal_full"]},
+    {"id": "earthquake", "name": "地震", "desc": "空岛剧烈震动！", "chance": 0.05, "effect": "all_damage", "player_damage": [3, 8], "enemy_damage": [5, 12]}
+  ],
+  "pets": {
+    "common_pets": [
+      {"id": "slime", "name": "史莱姆", "type": "support", "effect": "每回合回复3HP", "effects": {"regen_hp": 3}},
+      {"id": "rat_pet", "name": "小巨鼠", "type": "scout", "effect": "探索效率+10%", "effects": {"explore_efficiency": 1.10}},
+      {"id": "beetle", "name": "甲虫", "type": "gather", "effect": "采集数量+10%", "effects": {"gather_mult": 1.10}}
+    ],
+    "rare_pets": [
+      {"id": "cat_girl", "name": "猫娘", "type": "gather", "effect": "采集速度+20%，探索效率+15%", "effects": {"gather_mult": 1.20, "explore_efficiency": 1.15}},
+      {"id": "wolf_pet", "name": "幽狼", "type": "combat", "effect": "战斗中攻击力+15", "effects": {"atk_bonus": 15}},
+      {"id": "eagle_pet", "name": "虚空鹰", "type": "scout", "effect": "探索范围+50%", "effects": {"scout_range_mult": 1.50}},
+      {"id": "fox_spirit", "name": "狐灵", "type": "support", "effect": "幸运+15%，事件好结果率+10%", "effects": {"global_luck_mult": 1.15, "event_good_luck": 0.10}}
+    ],
+    "mythic_pets": [
+      {"id": "kunpeng", "name": "鲲鹏幼体", "type": "mythic", "effect": "吞噬岛屿反馈属性，全属性+20%", "effects": {"all_stats_mult": 1.20, "devour_feedback": true}},
+      {"id": "phoenix_chick", "name": "凤凰雏鸟", "type": "mythic", "effect": "死亡时自动复活（每7天一次），火属性免疫", "effects": {"revive_cooldown_days": 7, "fire_immune": true}}
+    ]
+  }
+}

@@ -74,6 +74,7 @@ button:active { transform:scale(0.96); }
 .stat-bar-fill.hunger { background:var(--orange); }
 .stat-bar-fill.water { background:var(--blue); }
 .stat-bar-fill.mental { background:var(--purple); }
+.stat-bar-fill.energy { background:var(--accent2); }
 .stat-val { min-width:28px; text-align:right; font-size:0.8em; color:var(--text2); }
 .time-info { margin-left:auto; display:flex; gap:10px; align-items:center; font-size:0.85em; color:var(--accent2); }
 
@@ -428,7 +429,7 @@ function createNewState() {
     player: player,
     equipment: eq,
     // === Core State ===
-    day: 1, hour: 6, totalTurns: 0,
+    day: 1, hour: 6, minute: 0, second: 0, totalTurns: 0,
     stats: stats, // shared reference with player.stats
     inventory: {},
     buildings: {},
@@ -1730,7 +1731,7 @@ function addLog(msg, type='') {
   if (!panel) return;
   const div = document.createElement('div');
   div.className = 'log-entry ' + type;
-  div.textContent = `[第${G.day}天 ${String(G.hour).padStart(2,'0')}:00] ${msg}`;
+  div.textContent = `[第${G.day}天 ${String(G.hour).padStart(2,'0')}:${String(G.minute||0).padStart(2,'0')}:${String(G.second||0).padStart(2,'0')}] ${msg}`;
   panel.appendChild(div);
   panel.scrollTop = panel.scrollHeight;
   // Keep last 200 entries
@@ -2762,20 +2763,10 @@ function startFishing() {
   // 1-30秒随机钓鱼时间
   const fishTime = (1 + Math.floor(Math.random() * 30)) * 1000;
   addLog('🎣 开始钓鱼...', 'system');
-
-  let progress = 0;
-  const progressInterval = setInterval(() => {
-    progress += (100 / (fishTime / 100));
-    if (progress > 100) progress = 100;
-    renderFishingProgress(progress);
-    if (progress >= 100) clearInterval(progressInterval);
-  }, 100);
-
   renderFishing();
 
   setTimeout(() => {
     G.fishingInProgress = false;
-    clearInterval(progressInterval);
     G.fishingCount++;
     addExp(8 + Math.floor(Math.random()*5));
     G.currentActivity = 'fishing';
@@ -2858,11 +2849,6 @@ function startFishing() {
 
     renderAll();
   }, 2000);
-}
-
-function renderFishingProgress(pct) {
-  const el = document.getElementById('fish-progress-bar');
-  if (el) el.style.width = Math.min(100, pct) + '%';
 }
 
 function determineFishCatch() {
@@ -3404,6 +3390,26 @@ function learnSkill(bookId) {
 function hasSkill(id) { return G.skills.includes(id); }
 
 // ============================================================
+// DISCARD ITEMS
+// ============================================================
+function discardItem(id) {
+  const count = G.inventory[id] || 0;
+  if (count <= 0) return;
+  const def = getItemDef(id);
+  const name = def ? def.name : id;
+  if (count === 1) {
+    removeInventoryItem(id, 1);
+    addLog(`🗑️ 丢弃了${name}`, 'system');
+  } else {
+    // Discard all at once
+    removeInventoryItem(id, count);
+    addLog(`🗑️ 丢弃了${name} x${count}`, 'system');
+  }
+  hideModal();
+  renderAll();
+}
+
+// ============================================================
 // USE ITEMS
 // ============================================================
 function useItem(id) {
@@ -3728,6 +3734,7 @@ function loadGame() {
     applyTalentEffects();
     initGarden();
     showScreen('game-screen');
+    startGameClock();
     renderAll();
     addLog('📂 读取存档成功！', 'system');
     return true;
@@ -3742,8 +3749,25 @@ function loadGame() {
 // ============================================================
 function startNewGame() {
   G = createNewState();
+  startGameClock();
   showScreen('talent-screen');
   renderTalentSelection();
+}
+
+// Real-time clock - updates every second
+let clockTimer = null;
+function startGameClock() {
+  if (clockTimer) clearInterval(clockTimer);
+  clockTimer = setInterval(() => {
+    if (!G || !G.gameStarted) return;
+    G.second = (G.second || 0) + 1;
+    if (G.second >= 60) { G.second = 0; G.minute = (G.minute || 0) + 1; }
+    if (G.minute >= 60) { G.minute = 0; G.hour = (G.hour || 0) + 1; }
+    if (G.hour >= 24) { G.hour = 0; G.day++; checkDailyEvents(); }
+    // Update clock display
+    const el = document.getElementById('game-clock');
+    if (el) el.textContent = `${String(G.hour).padStart(2,'0')}:${String(G.minute||0).padStart(2,'0')}:${String(G.second||0).padStart(2,'0')}`;
+  }, 1000);
 }
 
 let selectedTalent = null;
@@ -3931,6 +3955,11 @@ function renderStatusBar() {
       <span class="stat-val">${pct(stats.mental)}</span>
     </div>
     <div class="stat-item">
+      <span>⚡</span>
+      <div class="stat-bar-wrap"><div class="stat-bar-fill energy" style="width:${pct((stats.energy||0)/(stats.maxEnergy||100)*100)}%"></div></div>
+      <span class="stat-val">${pct(stats.energy||0)}/${stats.maxEnergy||100}</span>
+    </div>
+    <div class="stat-item">
       <span>⭐</span>
       <div class="stat-bar-wrap" style="width:80px"><div class="stat-bar-fill" style="width:${G.expToNext>0?pct(G.playerExp/G.expToNext*100):0}%;background:var(--gold)"></div></div>
       <span class="stat-val">Lv.${G.playerLevel||1} ${G.playerExp||0}/${G.expToNext||100}</span>
@@ -3940,7 +3969,7 @@ function renderStatusBar() {
       <span class="weather-badge">${GAME_DATA.gameplay.weather_types[G.weather]?.name||'☀️ 晴天'}</span>
       <span class="weather-desc">${wDesc}</span>
       <span>📅第${G.day}天</span>
-      <span>${String(G.hour).padStart(2,'0')}:00</span>
+      <span id="game-clock">${String(G.hour).padStart(2,'0')}:${String(G.minute||0).padStart(2,'0')}:${String(G.second||0).padStart(2,'0')}</span>
       <span>${getTimeOfDay()}</span>
     </div>
   `;
@@ -4026,7 +4055,6 @@ function renderMain() {
       <button class="quick-btn" onclick="switchTab('fishing')">🎣 钓鱼</button>
       <button class="quick-btn" onclick="switchTab('craft')">🔨 制作</button>
       <button class="quick-btn" onclick="switchTab('build')">🏗️ 建造</button>
-      <button class="quick-btn" onclick="advanceTime(1)">⏩ 休息1h</button>
       <button class="quick-btn" onclick="saveGame()">💾 保存</button>
     </div>
     <div class="panel">
@@ -4052,7 +4080,6 @@ function renderMain() {
       <p style="margin-top:4px;color:var(--text2)">天赋：${G.chosenTalent ? START_TALENTS.find(t=>t.id===G.chosenTalent)?.icon+' '+START_TALENTS.find(t=>t.id===G.chosenTalent)?.name : '无'}</p>
     </div>
     <div class="action-grid" style="margin-top:12px">
-      <button class="action-btn" onclick="advanceTime(1)">⏩ 休息1小时</button>
       <button class="action-btn" onclick="saveGame()">💾 手动保存</button>
     </div>
   `;
@@ -4467,10 +4494,10 @@ function renderFishing() {
       <div class="fishing-area">
         ${G.fishingInProgress ? `
           <div class="fishing-animation">🎣 ⋯⋯ 🌊</div>
-          <p>正在钓鱼，请等待...</p>
+          <p>钓鱼中...</p>
         ` : `
           <div class="fishing-animation">🐟</div>
-          <p>在空岛边缘垂钓，消耗1小时</p>
+          <p>在空岛边缘垂钓</p>
           <p style="font-size:0.85em;color:var(--text2)">当前钓竿：${G.equippedRod ? getItemName(G.equippedRod) : '无'}</p>
           <button class="action-btn primary" onclick="startFishing()" ${!hasRod?'disabled':''} style="margin-top:16px">
             🎣 开始钓鱼
@@ -4800,6 +4827,8 @@ function showItemModal(id) {
   if (['weapon','armor','tool'].includes(def.type) && hasProfession('smith') && G.itemAffixes && G.itemAffixes[id]) {
     actions += `<button onclick="rerollAffixes('${id}');showItemModal('${id}')" style="background:var(--orange);color:#fff">🔨 重铸词条</button>`;
   }
+  // Discard button
+  actions += `<button onclick="discardItem('${id}')" style="background:var(--red);color:#fff">🗑️ 丢弃</button>`;
 
   const stats = [];
   if (def.atk) stats.push(`攻击 +${def.atk}`);

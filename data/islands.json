@@ -1,0 +1,66 @@
+{
+  "islands": [
+    {
+      "id": "starter_island",
+      "name": "初始空岛",
+      "level": 1,
+      "size": "small",
+      "desc": "一座100×100米的浮空岛，覆盖着稀疏的草地和几棵树。",
+      "resources": [
+        {"id": "wood", "node": "枯树", "yield": [2, 4], "tool": null, "respawn_turns": 5},
+        {"id": "stone", "node": "碎石堆", "yield": [2, 3], "tool": null, "respawn_turns": 5},
+        {"id": "fiber", "node": "野草丛", "yield": [1, 3], "tool": null, "respawn_turns": 3},
+        {"id": "herb", "node": "草药丛", "yield": [1, 2], "tool": null, "respawn_turns": 8}
+      ],
+      "creatures": ["rat"],
+      "guardian": "guardian_1",
+      "events": ["find_chest", "strange_noise", "fallen_traveler"]
+    },
+    {
+      "id": "forest_island",
+      "name": "密林空岛",
+      "level": 2,
+      "size": "medium",
+      "desc": "一座被茂密森林覆盖的空岛，树木高大，光线昏暗。",
+      "resources": [
+        {"id": "wood", "node": "巨树", "yield": [4, 8], "tool": "axe", "respawn_turns": 8},
+        {"id": "fiber", "node": "藤蔓", "yield": [3, 5], "tool": null, "respawn_turns": 4},
+        {"id": "herb", "node": "灵芝", "yield": [2, 3], "tool": null, "respawn_turns": 10},
+        {"id": "feather", "node": "鸟巢", "yield": [1, 3], "tool": null, "respawn_turns": 6}
+      ],
+      "creatures": ["wolf", "eagle"],
+      "guardian": "guardian_2",
+      "events": ["ambush", "ancient_tree", "mushroom_grove"]
+    },
+    {
+      "id": "mineral_island",
+      "name": "矿脉空岛",
+      "level": 2,
+      "size": "medium",
+      "desc": "裸露出大量矿石的荒凉空岛，寸草不生。",
+      "resources": [
+        {"id": "stone", "node": "岩壁", "yield": [5, 8], "tool": "pickaxe", "respawn_turns": 6},
+        {"id": "iron_ore", "node": "铁矿脉", "yield": [3, 5], "tool": "pickaxe", "respawn_turns": 10},
+        {"id": "crystal", "node": "水晶簇", "yield": [1, 2], "tool": "pickaxe", "respawn_turns": 15}
+      ],
+      "creatures": ["boar"],
+      "guardian": "guardian_2",
+      "events": ["cave_in", "crystal_vein", "underground_lake"]
+    },
+    {
+      "id": "crystal_island",
+      "name": "水晶空岛",
+      "level": 3,
+      "size": "large",
+      "desc": "整座岛屿散发着淡紫色光芒，水晶遍布地表。",
+      "resources": [
+        {"id": "crystal", "node": "巨型水晶", "yield": [2, 4], "tool": "pickaxe", "respawn_turns": 12},
+        {"id": "void_stone", "node": "虚空裂隙", "yield": [1, 1], "tool": null, "respawn_turns": 30},
+        {"id": "herb", "node": "水晶花", "yield": [2, 4], "tool": null, "respawn_turns": 8}
+      ],
+      "creatures": ["eagle", "boar"],
+      "guardian": "guardian_3",
+      "events": ["void_rift", "crystal_storm", "ancient_ruins"]
+    }
+  ]
+}

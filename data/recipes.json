@@ -1,0 +1,35 @@
+{
+  "tools": [
+    {"id": "craft_stone_axe", "name": "石斧", "ingredients": {"wood": 3, "stone": 2}, "result": "stone_axe", "amount": 1, "unlock": "start"},
+    {"id": "craft_stone_pickaxe", "name": "石镐", "ingredients": {"wood": 3, "stone": 2}, "result": "stone_pickaxe", "amount": 1, "unlock": "start"},
+    {"id": "craft_iron_axe", "name": "铁斧", "ingredients": {"wood": 2, "iron_ore": 5}, "result": "iron_axe", "amount": 1, "unlock": "forge"},
+    {"id": "craft_iron_pickaxe", "name": "铁镐", "ingredients": {"wood": 2, "iron_ore": 5}, "result": "iron_pickaxe", "amount": 1, "unlock": "forge"},
+    {"id": "craft_fishing_rod", "name": "钓竿", "ingredients": {"wood": 3, "fiber": 5}, "result": "fishing_rod", "amount": 1, "unlock": "start"}
+  ],
+  "weapons": [
+    {"id": "craft_wooden_sword", "name": "木剑", "ingredients": {"wood": 5}, "result": "wooden_sword", "amount": 1, "unlock": "start"},
+    {"id": "craft_stone_sword", "name": "石剑", "ingredients": {"wood": 2, "stone": 3}, "result": "stone_sword", "amount": 1, "unlock": "start"},
+    {"id": "craft_iron_sword", "name": "铁剑", "ingredients": {"iron_ore": 5, "wood": 2}, "result": "iron_sword", "amount": 1, "unlock": "forge"},
+    {"id": "craft_crystal_blade", "name": "水晶刃", "ingredients": {"crystal": 3, "iron_ore": 5, "void_stone": 1}, "result": "crystal_blade", "amount": 1, "unlock": "altar"}
+  ],
+  "armor": [
+    {"id": "craft_leather_armor", "name": "皮甲", "ingredients": {"leather": 5, "fiber": 3}, "result": "leather_armor", "amount": 1, "unlock": "start"},
+    {"id": "craft_iron_armor", "name": "铁甲", "ingredients": {"iron_ore": 8, "leather": 3}, "result": "iron_armor", "amount": 1, "unlock": "forge"},
+    {"id": "craft_crystal_armor", "name": "水晶甲", "ingredients": {"crystal": 5, "iron_ore": 5, "void_stone": 1}, "result": "crystal_armor", "amount": 1, "unlock": "altar"}
+  ],
+  "consumables": [
+    {"id": "craft_cooked_meat", "name": "烤肉", "ingredients": {"meat": 1, "wood": 1}, "result": "cooked_meat", "amount": 1, "unlock": "campfire"},
+    {"id": "craft_bandage", "name": "绷带", "ingredients": {"fiber": 3}, "result": "bandage", "amount": 1, "unlock": "start"},
+    {"id": "craft_herb_potion", "name": "草药汁", "ingredients": {"herb": 3, "wood": 1}, "result": "herb_potion", "amount": 1, "unlock": "campfire"},
+    {"id": "craft_crystal_potion", "name": "水晶药剂", "ingredients": {"crystal": 1, "herb": 5}, "result": "crystal_potion", "amount": 1, "unlock": "altar"}
+  ],
+  "buildings": [
+    {"id": "build_campfire", "name": "篝火", "ingredients": {"wood": 5, "stone": 3}, "result": "campfire", "unlock": "start", "desc": "解锁烹饪功能"},
+    {"id": "build_workbench", "name": "工作台", "ingredients": {"wood": 8, "stone": 5}, "result": "workbench", "unlock": "start", "desc": "解锁高级制作"},
+    {"id": "build_forge", "name": "锻造炉", "ingredients": {"stone": 15, "iron_ore": 5, "wood": 3}, "result": "forge", "unlock": "workbench", "desc": "解锁铁制装备"},
+    {"id": "build_storage", "name": "储物箱", "ingredients": {"wood": 10, "iron_ore": 2}, "result": "storage", "unlock": "workbench", "desc": "扩展仓库容量+20"},
+    {"id": "build_altar", "name": "空岛祭坛", "ingredients": {"crystal": 5, "stone": 20, "void_stone": 2}, "result": "altar", "unlock": "forge", "desc": "解锁水晶装备与岛屿融合"},
+    {"id": "build_wall", "name": "防御墙", "ingredients": {"stone": 8}, "result": "wall", "unlock": "start", "desc": "防御+2"},
+    {"id": "build_watchtower", "name": "瞭望塔", "ingredients": {"wood": 15, "stone": 10}, "result": "watchtower", "unlock": "workbench", "desc": "可侦察邻近空岛"}
+  ]
+}
