@@ -759,6 +759,14 @@ function getItemDef(id) {
     expand_voucher: {name:'扩展券',desc:'扩展空岛面积',type:'special',grade:'E'},
     raw_fish: {name:'生鱼',desc:'可食用或烹饪',type:'food',hunger_restore:12,grade:'F'},
     cooked_fish: {name:'烤鱼',desc:'恢复25饱食度',type:'food',hunger_restore:25,grade:'F'},
+    // 宝箱类型
+    chest_white: {name:'白色宝箱',desc:'普通宝箱，需要白色钥匙开启',type:'chest',tier:'white',grade:'F'},
+    chest_green: {name:'绿色宝箱',desc:'优良宝箱，需要绿色钥匙开启',type:'chest',tier:'green',grade:'E'},
+    chest_blue: {name:'蓝色宝箱',desc:'稀有宝箱，需要蓝色钥匙开启',type:'chest',tier:'blue',grade:'D'},
+    chest_silver: {name:'银色宝箱',desc:'珍贵宝箱，需要银色钥匙开启',type:'chest',tier:'silver',grade:'C'},
+    chest_gold: {name:'金色宝箱',desc:'奢华宝箱，需要金色钥匙开启',type:'chest',tier:'gold',grade:'B'},
+    chest_rainbow: {name:'彩虹宝箱',desc:'传说宝箱，需要彩虹钥匙开启',type:'chest',tier:'rainbow',grade:'A'},
+    chest_black: {name:'暗黑宝箱',desc:'至高宝箱，需要暗黑钥匙开启',type:'chest',tier:'black',grade:'S'},
     freshwater: {name:'淡水',desc:'恢复30饮水',type:'consumable',water_restore:30,grade:'F'},
     void_fish: {name:'虚空鱼',desc:'稀有鱼类，恢复全状态',type:'food',hunger_restore:50,heal:30,water_restore:30,grade:'C'},
     profession_book_guardian: {name:'职业书·守护者',desc:'学习守护者职业',type:'profession_book',profession:'guardian',grade:'C'},
@@ -1034,6 +1042,7 @@ function getItemIcon(id) {
     basic_bait:'🪱', ore_bait:'🪨', crystal_bait:'💎', void_bait:'🌀',
     herb_bait:'🌿', void_bait:'🌀',
     key_blue:'🔑', key_silver:'🔑', key_gold:'🔑', key_rainbow:'🔑', key_black:'🔑',
+    chest_white:'📦', chest_green:'📦', chest_blue:'📦', chest_silver:'📦', chest_gold:'📦', chest_rainbow:'📦', chest_black:'📦',
     island_crystal:'💎', talent_stone:'✨', talent_evolution_stone:'🌟',
     pet_egg_common:'🥚', pet_egg_rare:'🥚', pet_egg_mythic:'🥚',
     void_core:'🔮', island_fragment:'🗺️', building_blueprint:'📋', legendary_blueprint:'📋',
@@ -2631,111 +2640,9 @@ function openChest(tier) {
   const chestDef = GAME_DATA.gameplay.chest_tiers[tier];
   if (!chestDef) return;
 
-  // Check key requirement
-  if (chestDef.key_required) {
-    const keyId = chestDef.key_id;
-    if (!hasItem(keyId)) {
-      addLog(`🔒 需要${getItemName(keyId)}才能开启${chestDef.name}！`, 'warning');
-      // Store chest in inventory
-      addInventoryItem('chest_' + tier, 1);
-      return;
-    }
-    removeInventoryItem(keyId);
-  }
-
-  G.chestOpened++;
-  const loot = [];
-  const pool = chestDef.loot_pool;
-  const numItems = 1 + Math.floor(Math.random()*3);
-
-  for (let i = 0; i < numItems; i++) {
-    const item = weightedRandom(pool);
-    if (item) {
-      const count = item.min + Math.floor(Math.random()*(item.max - item.min + 1));
-      addInventoryItem(item.id, count);
-      loot.push(`${getItemName(item.id)} x${count}`);
-      // Generate affixes for equipment from chests
-      const iDef = getItemDef(item.id);
-      if (iDef && ['weapon','armor','tool'].includes(iDef.type)) {
-        const luckyBonus = getTalentEffect('chest_rare_bonus',0);
-        const affixes = generateAffixes(item.id, iDef.grade||'F', luckyBonus);
-        if (affixes.length > 0) {
-          storeAffixes(item.id, affixes);
-        }
-      }
-    }
-  }
-
-  // Lucky bonus
-  if (getTalentEffect('chest_rare_bonus',0) > 0 && Math.random() < 0.12) {
-    const bonusPool = pool.filter(i => {
-      const def = getItemDef(i.id);
-      return def && ['C','B','A','S'].includes(def.grade);
-    });
-    if (bonusPool.length > 0) {
-      const bonus = weightedRandom(bonusPool);
-      if (bonus) {
-        addInventoryItem(bonus.id, 1);
-        loot.push(`${getItemName(bonus.id)} x1（幸运加成！）`);
-      }
-    }
-  }
-
-  // Profession/skill book drop from chest
-  const bookChance = tier === 'blue' ? 0.10 : tier === 'silver' ? 0.15 : tier === 'gold' ? 0.20 : tier === 'rainbow' ? 0.25 : tier === 'black' ? 0.30 : 0.03;
-  if (Math.random() < bookChance) {
-    // Tier-based book selection
-    const basicBooks = ['profession_book_guardian','profession_book_pioneer','profession_book_smith','profession_book_hunter','profession_book_healer','profession_book_rogue','profession_book_priest','profession_book_alchemist','profession_book_berserker'];
-    const advBooks = ['profession_book_skywalker','profession_book_enchanter','profession_book_commander','profession_book_necromancer','profession_book_ranger'];
-    const legendaryBooks = ['profession_book_paladin','profession_book_shadow_king'];
-    const mythicBooks = ['profession_book_void_sovereign'];
-    const basicSkills = ['skill_book_guardian_1','skill_book_guardian_2','skill_book_pioneer_1','skill_book_pioneer_2','skill_book_smith_1','skill_book_smith_2','skill_book_hunter_1','skill_book_hunter_2','skill_book_healer_1','skill_book_healer_2','skill_book_rogue_1','skill_book_rogue_2','skill_book_priest_1','skill_book_priest_2','skill_book_alchemist_1','skill_book_alchemist_2','skill_book_berserker_1','skill_book_berserker_2','skill_book_universal_1','skill_book_universal_2','skill_book_universal_3','skill_book_universal_4','skill_book_universal_7','skill_book_universal_8'];
-    const advSkills = ['skill_book_skywalker_1','skill_book_skywalker_2','skill_book_enchanter_1','skill_book_enchanter_2','skill_book_commander_1','skill_book_commander_2','skill_book_necromancer_1','skill_book_necromancer_2','skill_book_ranger_1','skill_book_ranger_2','skill_book_rogue_3','skill_book_priest_3','skill_book_alchemist_3','skill_book_berserker_3','skill_book_universal_9','skill_book_universal_10'];
-    const ultSkills = ['skill_book_guardian_3','skill_book_guardian_4','skill_book_pioneer_3','skill_book_pioneer_4','skill_book_smith_3','skill_book_smith_4','skill_book_hunter_3','skill_book_hunter_4','skill_book_healer_3','skill_book_healer_4','skill_book_skywalker_3','skill_book_skywalker_4','skill_book_enchanter_3','skill_book_enchanter_4','skill_book_commander_3','skill_book_commander_4','skill_book_necromancer_3','skill_book_necromancer_4','skill_book_ranger_3','skill_book_ranger_4','skill_book_rogue_4','skill_book_priest_4','skill_book_alchemist_4','skill_book_berserker_4','skill_book_universal_5','skill_book_universal_6','skill_book_universal_11'];
-    const legendarySkills = ['skill_book_paladin_1','skill_book_paladin_2','skill_book_paladin_3','skill_book_paladin_4','skill_book_shadow_king_1','skill_book_shadow_king_2','skill_book_shadow_king_3','skill_book_shadow_king_4'];
-    const mythicSkills = ['skill_book_void_sovereign_1','skill_book_void_sovereign_2','skill_book_void_sovereign_3','skill_book_void_sovereign_4'];
-
-    let bookPool;
-    if (tier === 'black') bookPool = [...advBooks, ...legendaryBooks, ...mythicBooks, ...ultSkills, ...legendarySkills, ...mythicSkills];
-    else if (tier === 'rainbow') bookPool = [...advBooks, ...legendaryBooks, ...advSkills, ...ultSkills.slice(0,10), ...legendarySkills.slice(0,2)];
-    else if (tier === 'gold') bookPool = [...basicBooks, ...advBooks, ...advSkills, ...ultSkills.slice(0,5)];
-    else if (tier === 'silver') bookPool = [...basicBooks, ...basicSkills];
-    else bookPool = [...basicBooks.slice(0,5), ...basicSkills.slice(0,8)];
-
-    const book = bookPool[Math.floor(Math.random()*bookPool.length)];
-    addInventoryItem(book, 1);
-    loot.push(`${getItemName(book)} x1（稀有掉落！）`);
-  }
-
-  // Blueprint drop - tier-based
-  const bpChance = tier==='white'?0.02:tier==='green'?0.05:tier==='blue'?0.08:tier==='silver'?0.12:tier==='gold'?0.18:tier==='rainbow'?0.25:0.35;
-  if (Math.random() < bpChance) {
-    const basicBps = ['blueprint_defense_wall','blueprint_watchtower','blueprint_greenhouse','blueprint_water_well'];
-    const midBps = ['blueprint_crystal_forge','blueprint_medical_tent','blueprint_traps','blueprint_enchanting','blueprint_rogue_den','blueprint_alchemy_lab'];
-    const advBps = ['blueprint_fortress_wall','blueprint_radar','blueprint_void_forge','blueprint_auto_farm','blueprint_purifier','blueprint_hospital','blueprint_mage_tower','blueprint_library'];
-    const highBps = ['blueprint_void_gate','blueprint_arena','blueprint_temple'];
-
-    let bpPool;
-    if (tier === 'black') bpPool = [...advBps, ...highBps];
-    else if (tier === 'rainbow') bpPool = [...midBps, ...advBps];
-    else if (tier === 'gold') bpPool = [...basicBps, ...midBps];
-    else if (tier === 'silver') bpPool = [...basicBps, ...midBps.slice(0,2)];
-    else bpPool = basicBps;
-
-    const bp = bpPool[Math.floor(Math.random()*bpPool.length)];
-    if (!G.blueprints.includes(bp)) {
-      G.blueprints.push(bp);
-      addInventoryItem(bp, 1);
-      loot.push(`📋 ${getItemName(bp)}（新蓝图！）`);
-    } else {
-      // Already have blueprint, give material instead
-      addInventoryItem('iron_ore', 3);
-      loot.push('📋 重复蓝图，获得铁矿x3');
-    }
-  }
-
-  addLog(`📦 开启${chestDef.name}：${loot.join(', ')}`, 'loot');
-  showChestModal(tier, loot);
+  // 所有宝箱都存入背包，不自动打开
+  addInventoryItem('chest_' + tier, 1);
+  addLog(`📦 获得${chestDef.name}，已存入背包`, 'loot');
 }
 
 function weightedRandom(pool) {
@@ -2758,6 +2665,12 @@ function startFishing() {
     addLog('❌ 需要钓竿才能钓鱼！', 'warning');
     return;
   }
+  // 精力检查
+  if ((G.stats.energy || 0) < 5) {
+    addLog('❌ 精力不足！（需要5精力）', 'warning');
+    return;
+  }
+  G.stats.energy -= 5;
 
   G.fishingInProgress = true;
   // 1-30秒随机钓鱼时间
@@ -2896,6 +2809,13 @@ function determineFishCatch() {
 // GATHERING / EXPLORATION
 // ============================================================
 function gatherResource(type) {
+  // 精力检查
+  if ((G.stats.energy || 0) < 8) {
+    addLog('❌ 精力不足！（需要8精力）', 'warning');
+    return;
+  }
+  G.stats.energy -= 8;
+
   const gatherMult = getTalentMult('gather_mult', 1) * (hasProfession('pioneer') ? 1.2 : 1);
   const harvestBonus = combatState && combatState.doubleHarvest ? 2 : 1;
 
@@ -3003,6 +2923,13 @@ function gatherResource(type) {
 }
 
 function exploreIsland() {
+  // 精力检查
+  if ((G.stats.energy || 0) < 10) {
+    addLog('❌ 精力不足！（需要10精力）', 'warning');
+    return;
+  }
+  G.stats.energy -= 10;
+
   const events = GAME_DATA.events.exploration_events;
   if (!events || events.length === 0) {
     addLog('🔍 探索了一番，没有发现什么特别的。', 'system');
@@ -3071,7 +2998,7 @@ function plantSeed(plotIndex, seedId) {
     seedId: seedId,
   };
   addLog(`🌱 种下了${seedDef.name}！`, 'good');
-  renderGarden();
+  renderAll(); // 刷新UI显示种植结果
 }
 
 function updateGarden() {
@@ -3096,7 +3023,7 @@ function harvestGarden(plotIndex) {
   addInventoryItem(plot.id, finalCount);
   addLog(`🌾 收获${getItemName(plot.id)} x${finalCount}`, 'loot');
   G.garden[plotIndex] = {id:null, timer:0, stage:0};
-  renderGarden();
+  renderAll(); // 刷新UI显示收获结果
 }
 
 // ============================================================
@@ -4826,6 +4753,10 @@ function showItemModal(id) {
   // Reroll affixes button (smith only, for equipment with affixes)
   if (['weapon','armor','tool'].includes(def.type) && hasProfession('smith') && G.itemAffixes && G.itemAffixes[id]) {
     actions += `<button onclick="rerollAffixes('${id}');showItemModal('${id}')" style="background:var(--orange);color:#fff">🔨 重铸词条</button>`;
+  }
+  // Chest open button
+  if (id.startsWith('chest_')) {
+    actions += `<button onclick="openChestFromInventory('${id}');hideModal();renderAll()" style="background:var(--gold);color:#000">📦 打开宝箱</button>`;
   }
   // Discard button
   actions += `<button onclick="discardItem('${id}')" style="background:var(--red);color:#fff">🗑️ 丢弃</button>`;
