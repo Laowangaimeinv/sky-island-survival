@@ -2671,6 +2671,7 @@ function startFishing() {
     return;
   }
   G.stats.energy -= 5;
+  renderStatusBar();
 
   G.fishingInProgress = true;
   // 1-30秒随机钓鱼时间
@@ -2815,6 +2816,7 @@ function gatherResource(type) {
     return;
   }
   G.stats.energy -= 8;
+  renderStatusBar();
 
   const gatherMult = getTalentMult('gather_mult', 1) * (hasProfession('pioneer') ? 1.2 : 1);
   const harvestBonus = combatState && combatState.doubleHarvest ? 2 : 1;
@@ -2929,6 +2931,7 @@ function exploreIsland() {
     return;
   }
   G.stats.energy -= 10;
+  renderStatusBar();
 
   const events = GAME_DATA.events.exploration_events;
   if (!events || events.length === 0) {
@@ -3691,9 +3694,12 @@ function startGameClock() {
     if (G.second >= 60) { G.second = 0; G.minute = (G.minute || 0) + 1; }
     if (G.minute >= 60) { G.minute = 0; G.hour = (G.hour || 0) + 1; }
     if (G.hour >= 24) { G.hour = 0; G.day++; checkDailyEvents(); }
-    // Update clock display
+    // 每秒恢复精力
+    regenEnergy();
+    // Update clock and energy display
     const el = document.getElementById('game-clock');
     if (el) el.textContent = `${String(G.hour).padStart(2,'0')}:${String(G.minute||0).padStart(2,'0')}:${String(G.second||0).padStart(2,'0')}`;
+    renderStatusBar();
   }, 1000);
 }
 
@@ -3788,9 +3794,13 @@ function switchTab(id) {
 }
 
 function regenEnergy() {
-  if (!G.stats.maxEnergy) G.stats.maxEnergy = 80 + (G.stats.spirit||10) * 3;
-  const regenRate = 5 + (G.stats.spirit||10) * 0.5 + G.stats.maxEnergy * 0.02;
-  G.stats.energy = Math.min(G.stats.maxEnergy, G.stats.energy + Math.floor(regenRate * 0.1));
+  // 精力上限公式：80 + 精神×3 + 等级×2
+  G.stats.maxEnergy = 80 + (G.stats.spirit||10) * 3 + (G.playerLevel||1) * 2;
+  // 精力恢复公式：5 + 精神×0.5 + 上限×0.02（每小时）
+  // 转换为每秒恢复：恢复量 / 3600
+  const regenPerHour = 5 + (G.stats.spirit||10) * 0.5 + G.stats.maxEnergy * 0.02;
+  const regenPerSecond = regenPerHour / 3600;
+  G.stats.energy = Math.min(G.stats.maxEnergy, G.stats.energy + regenPerSecond);
 }
 function renderAll() {
   renderStatusBar();
