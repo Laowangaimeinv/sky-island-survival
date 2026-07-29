@@ -1047,8 +1047,12 @@ function getItemDef(id) {
     shadow_eel: {name:'暗影鳗',desc:'深海的暗影生物',type:'food',hunger_restore:35,heal:20,grade:'C'},
     starfish: {name:'星辉海星',desc:'散发星光的海星',type:'consumable',heal:25,mana_restore:25,grade:'B'},
     // === BAITS (expanded) ===
-    herb_bait: {name:'草药饵',desc:'用草药制作的饵料',type:'bait',quality_bonus:0.15,grade:'E'},
-    void_bait: {name:'虚空饵',desc:'虚空能量吸引稀有鱼',type:'bait',quality_bonus:0.3,grade:'C'},
+    herb_bait: {name:'草药饵',desc:'用草药制作的饵料，稀有鱼+15%',type:'bait',quality_bonus:0.15,grade:'E'},
+    void_bait: {name:'虚空饵',desc:'虚空能量吸引稀有鱼，稀有鱼+30%',type:'bait',quality_bonus:0.3,grade:'C'},
+    meat_bait: {name:'肉饵',desc:'用生肉制作，大鱼+10%',type:'bait',quality_bonus:0.1,grade:'F'},
+    crystal_bait: {name:'水晶饵',desc:'水晶能量吸引宝箱，宝箱率+10%',type:'bait',quality_bonus:0.2,chest_bonus:0.1,grade:'D'},
+    star_bait: {name:'星辉饵',desc:'星光之力，传说鱼+20%',type:'bait',quality_bonus:0.25,grade:'B'},
+    lucky_bait: {name:'幸运饵',desc:'带来好运，全局幸运+10%',type:'bait',quality_bonus:0.1,luck_bonus:0.1,grade:'D'},
     // === TIER 2 EQUIPMENT (mid-game, forge) ===
     iron_sword: {name:'铁剑',desc:'坚固的铁剑',type:'weapon',atk:12,durability:45,grade:'D'},
     iron_armor_body: {name:'铁甲',desc:'铁制护甲',type:'armor',slot:'body',def:12,durability:50,grade:'D'},
@@ -1140,7 +1144,7 @@ function getItemIcon(id) {
     common_fish:'🐟', rare_fish:'🐠', legendary_fish:'🐋',
     wood_rod:'🎣', iron_rod:'🎣', crystal_rod:'🎣', void_rod:'🎣', mythic_rod:'🎣',
     basic_bait:'🪱', ore_bait:'🪨', crystal_bait:'💎', void_bait:'🌀',
-    herb_bait:'🌿', void_bait:'🌀',
+    herb_bait:'🌿', void_bait:'🌀', meat_bait:'🥩', crystal_bait:'💎', star_bait:'⭐', lucky_bait:'🍀',
     key_blue:'🔑', key_silver:'🔑', key_gold:'🔑', key_rainbow:'🔑', key_black:'🔑',
     chest_white:'📦', chest_green:'📦', chest_blue:'📦', chest_silver:'📦', chest_gold:'📦', chest_rainbow:'📦', chest_black:'📦',
     island_crystal:'💎', talent_stone:'✨', talent_evolution_stone:'🌟',
@@ -3137,6 +3141,16 @@ function startFishing() {
       addLog(`🔑 获得了${getItemName(keyId)}！`, 'loot');
     }
 
+    // 钓饵掉落 (25%)
+    if (Math.random() < 0.25) {
+      const baitPool = ['meat_bait','herb_bait','herb_bait','lucky_bait'];
+      if (G.day >= 20) baitPool.push('crystal_bait');
+      if (G.day >= 40) baitPool.push('star_bait');
+      const baitId = baitPool[Math.floor(Math.random()*baitPool.length)];
+      addInventoryItem(baitId, 1);
+      addLog(`🪱 获得了${getItemName(baitId)}！`, 'loot');
+    }
+
     // Chance for profession book (5%)
     if (Math.random() < 0.05) {
       const basicProf = ['profession_book_guardian','profession_book_pioneer','profession_book_smith','profession_book_hunter','profession_book_healer','profession_book_rogue','profession_book_priest','profession_book_alchemist','profession_book_berserker'];
@@ -3172,11 +3186,23 @@ function startFishing() {
 }
 
 function determineFishCatch() {
-  // Bait quality bonus
+  // Bait quality bonus (v2: use Equipment class)
   let qualityBonus = 0;
-  if (G.equippedBait) {
+  let baitId = null;
+  if (G.player) {
+    const bait = G.player.equipment.getBait();
+    if (bait) {
+      baitId = bait.itemId;
+      qualityBonus += bait.itemData.quality_bonus || 0;
+      qualityBonus += (bait.itemData.tier_bonus || 0) * 0.1; // tier_bonus转为quality_bonus
+    }
+  } else if (G.equippedBait) {
+    baitId = G.equippedBait;
     const baitDef = getItemDef(G.equippedBait);
-    if (baitDef && baitDef.quality_bonus) qualityBonus = baitDef.quality_bonus;
+    if (baitDef) {
+      qualityBonus += baitDef.quality_bonus || 0;
+      qualityBonus += (baitDef.tier_bonus || 0) * 0.1;
+    }
   }
 
   // 钓鱼天赋加成
@@ -3604,6 +3630,10 @@ function getCustomRecipes() {
     // Bait recipes
     {id:'craft_herb_bait', name:'草药饵', result:'herb_bait', amount:3, ingredients:{herb:2,raw_fish:1}, category:'consumables', unlock:'start'},
     {id:'craft_void_bait', name:'虚空饵', result:'void_bait', amount:2, ingredients:{void_essence:1,raw_fish:2}, category:'consumables', unlock:'altar'},
+    {id:'craft_meat_bait', name:'肉饵', result:'meat_bait', amount:3, ingredients:{meat:2}, category:'consumables', unlock:'start'},
+    {id:'craft_crystal_bait', name:'水晶饵', result:'crystal_bait', amount:2, ingredients:{crystal:1,raw_fish:1}, category:'consumables', unlock:'workbench'},
+    {id:'craft_star_bait', name:'星辉饵', result:'star_bait', amount:1, ingredients:{star_fragment:1,void_essence:1,raw_fish:2}, category:'consumables', unlock:'void_forge'},
+    {id:'craft_lucky_bait', name:'幸运饵', result:'lucky_bait', amount:2, ingredients:{herb:2,feather:1,raw_fish:1}, category:'consumables', unlock:'campfire'},
     // Seed recipes
     {id:'craft_rice_seed', name:'稻米种子', result:'rice_seed', amount:3, ingredients:{rice:2}, category:'consumables', unlock:'start'},
     {id:'craft_crystal_grass_seed', name:'水晶草种子', result:'crystal_grass_seed', amount:2, ingredients:{crystal_grass:1,crystal:1}, category:'consumables', unlock:'workbench'},
