@@ -3427,6 +3427,9 @@ function craftItem(recipe) {
   let successRate = 1.0;
   if (hasProfession('smith')) successRate += 0.22;
 
+  // Material save from talent
+  const materialSave = getTalentEffect('materialSave', 0);
+
   // Free craft from skill
   if (combatState && combatState.freeCraft) {
     combatState.freeCraft = false;
@@ -3435,6 +3438,8 @@ function craftItem(recipe) {
     for (const [res, need] of Object.entries(recipe.ingredients)) {
       let actualNeed = need;
       if (hasProfession('smith') && Math.random() < 0.2) actualNeed = Math.max(1, need-1);
+      // Talent material save
+      if (materialSave > 0 && Math.random() < materialSave) actualNeed = Math.max(1, actualNeed - 1);
       removeInventoryItem(res, actualNeed);
     }
   }
@@ -3445,7 +3450,27 @@ function craftItem(recipe) {
   // Generate affixes for equipment
   const resultDef = getItemDef(recipe.result);
   if (resultDef && ['weapon','armor','tool'].includes(resultDef.type)) {
-    const grade = resultDef.grade || 'F';
+    let grade = resultDef.grade || 'F';
+    // 天赋制作品质提升
+    const talentQualityUp = getTalentEffect('craftQualityUp', 0);
+    const profQualityUp = hasProfession('smith') ? 1 : 0;
+    const totalQualityUp = talentQualityUp + profQualityUp;
+    if (totalQualityUp > 0) {
+      const gradeOrder = ['F','E','D','C','B','A','S','SS','SSS'];
+      const currentIdx = gradeOrder.indexOf(grade);
+      const newIdx = Math.min(currentIdx + totalQualityUp, gradeOrder.length - 1);
+      grade = gradeOrder[newIdx];
+      if (grade !== resultDef.grade) {
+        addLog(`  ⬆️ 品质提升：${resultDef.grade} → ${grade}`, 'good');
+      }
+    }
+
+    // 天赋耐久加成
+    const durabilityMult = getTalentMult('durabilityMult', 1);
+    const baseDurability = resultDef.durability || 0;
+    const finalDurability = baseDurability > 0 ? Math.floor(baseDurability * durabilityMult) : 0;
+
+    // Smith profession bonus
     const smithBonus = hasProfession('smith') ? 0.15 : 0;
     const qualityBonus = (combatState && combatState.qualityUp) ? 1 : 0;
     if (combatState) combatState.qualityUp = false;
@@ -3454,6 +3479,14 @@ function craftItem(recipe) {
       storeAffixes(recipe.result, affixes);
       const affixNames = affixes.map(a=>`${a.name}[${AFFIX_TIERS[a.tier].name}]`).join(', ');
       addLog(`  ✦ 词条：${affixNames}`, 'good');
+    }
+
+    // 应用耐久加成到物品
+    if (finalDurability > 0 && finalDurability !== baseDurability) {
+      addLog(`  🔨 耐久：${baseDurability} → ${finalDurability}`, 'good');
+      // 存储耐久加成信息
+      if (!G.toolDurability) G.toolDurability = {};
+      G.toolDurability[recipe.result] = finalDurability;
     }
   }
 
