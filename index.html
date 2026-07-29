@@ -3999,6 +3999,7 @@ function doEquip(itemId, slot) {
   
   const slotNames = {left_hand:'主手',right_hand:'副手',head:'头部',body:'身体',back:'背部',accessory:'饰品',bait:'钓饵'};
   addLog(`⚔️ 装备了${def.name}（${slotNames[slot]||slot}）`, 'system');
+  hideModal();
   renderAll();
 }
 
@@ -5571,7 +5572,7 @@ function showItemModal(id) {
   }
   // Equip button
   if (def.type === 'weapon' || def.type === 'armor' || def.type === 'tool' || def.type === 'bait') {
-    actions += `<button onclick="useItem('${id}');hideModal();renderAll()" style="background:var(--accent2);color:#fff">装备</button>`;
+    actions += `<button onclick="useItem('${id}')" style="background:var(--accent2);color:#fff">装备</button>`;
   }
   // Reroll affixes button (smith only, for equipment with affixes)
   if (['weapon','armor','tool'].includes(def.type) && hasProfession('smith') && G.itemAffixes && G.itemAffixes[id]) {
