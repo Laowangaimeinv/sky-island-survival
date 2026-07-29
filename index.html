@@ -1883,6 +1883,27 @@ function removeInventoryItem(id, count=1) {
 
 function hasItem(id, count=1) { return (G.inventory[id]||0) >= count; }
 
+// Auto-unequip broken items
+function unequipBrokenItems() {
+  if (!G.player) return;
+  const eq = G.player.equipment;
+  const slots = [
+    {slot: EquipSlot.WEAPON, name: 'weapon'},
+    {slot: EquipSlot.BODY, name: 'armor'},
+    {slot: EquipSlot.HEAD, name: 'head'},
+    {slot: EquipSlot.TOOL, name: 'tool'},
+    {slot: EquipSlot.ROD, name: 'rod'},
+  ];
+  for (const s of slots) {
+    const item = eq.slots[s.slot];
+    if (item && item.isBroken) {
+      eq.unequip(s.slot);
+      eq.syncToLegacy();
+      addLog(`💔 ${item.name}已损坏，自动卸下`, 'warning');
+    }
+  }
+}
+
 function hasTool(toolType) {
   // Check equipped tool
   if (G.player) {
@@ -2312,6 +2333,16 @@ function playerAttack(targetIndex) {
   const target = combatState.enemies[targetIndex];
   if (!target || target.currentHp <= 0) return;
 
+  // Check if weapon is broken
+  unequipBrokenItems();
+  if (G.player) {
+    const weapon = G.player.equipment.getWeapon();
+    if (weapon && weapon.isBroken) {
+      addLog('❌ 武器已损坏！', 'warning');
+      return;
+    }
+  }
+
   combatState.turn++;
   let atk = calcPlayerAtk();
   // v2: use player crit stats (matches Python combat.player_attack)
@@ -2350,6 +2381,7 @@ function playerAttack(targetIndex) {
       if (broken) {
         const weapon = G.player.equipment.getWeapon();
         addLog(`💔 ${weapon ? weapon.name : '武器'}损坏了！`, 'warning');
+        unequipBrokenItems();
       }
     } else if (G.equippedWeapon && G.toolDurability[G.equippedWeapon] != null) {
       G.toolDurability[G.equippedWeapon]--;
@@ -2510,6 +2542,7 @@ function enemyTurn() {
       if (broken) {
         const armor = G.player.equipment.getArmor();
         addLog(`💔 ${armor ? armor.name : '护甲'}损坏了！`, 'warning');
+        unequipBrokenItems();
       }
     } else if (G.equippedArmor && G.toolDurability[G.equippedArmor] != null) {
       G.toolDurability[G.equippedArmor]--;
@@ -2975,6 +3008,7 @@ function gatherResource(type) {
       tool.consumeDurability(1);
       if (tool.isBroken) {
         addLog(`💔 ${tool.name}损坏了！`, 'warning');
+        unequipBrokenItems();
       }
       G.player.equipment.syncToLegacy();
     }
@@ -3846,6 +3880,8 @@ function startGameClock() {
     while (G.hour >= 24) { G.hour -= 24; G.day++; checkDailyEvents(); }
     // 每秒恢复精力
     regenEnergy();
+    // 检查并卸下损坏的装备
+    unequipBrokenItems();
     // Update clock and energy display
     const el = document.getElementById('game-clock');
     if (el) el.textContent = `${String(G.hour).padStart(2,'0')}:${String(G.minute||0).padStart(2,'0')}:${String(G.second||0).padStart(2,'0')}`;
