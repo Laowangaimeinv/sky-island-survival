@@ -312,7 +312,7 @@ button:active { transform:scale(0.96); }
 .buff-badge.profession { background:rgba(168,85,247,0.15); border:1px solid var(--purple); color:var(--purple); }
 
 /* Durability Bar */
-.dur-bar { width:100%; height:3px; background:#333; border-radius:2px; margin-top:3px; }
+.dur-bar { width:100%; max-width:80px; height:4px; background:#333; border-radius:2px; margin-top:3px; }
 .dur-bar-fill { height:100%; border-radius:2px; transition:width 0.3s; }
 .dur-label { font-size:0.65em; color:var(--text2); margin-top:1px; }
 
@@ -2855,10 +2855,17 @@ function combatVictory() {
   // Random chest drop
   if (Math.random() < 0.2) {
     const chestTier = rollChestTier();
-    // 宝箱直接存入背包
     addInventoryItem('chest_' + chestTier, 1);
     const chestDef = GAME_DATA.gameplay.chest_tiers[chestTier];
     addLog(`📦 获得了${chestDef?.name || '宝箱'}！（在背包中打开）`, 'loot');
+  }
+
+  // 钥匙掉落 (15%)
+  if (Math.random() < 0.15) {
+    const keyPool = ['key_blue','key_blue','key_silver','key_gold'];
+    const keyId = keyPool[Math.floor(Math.random()*keyPool.length)];
+    addInventoryItem(keyId, 1);
+    addLog(`🔑 获得了${getItemName(keyId)}！`, 'loot');
   }
 
   combatState = null;
@@ -3078,11 +3085,18 @@ function startFishing() {
     }
 
     // Chance for chest (35% - fishing is main chest source) - 存入背包
-    // 宝箱掉落天赋
     let chestChance = 0.35 + getTalentEffect('chestDropBonus', 0) + getTalentEffect('globalLuck', 0);
     if (Math.random() < chestChance) {
       const tier = rollChestTier();
       openChest(tier);
+    }
+
+    // 钥匙掉落 (20%)
+    if (Math.random() < 0.20) {
+      const keyPool = ['key_blue','key_blue','key_silver','key_gold'];
+      const keyId = keyPool[Math.floor(Math.random()*keyPool.length)];
+      addInventoryItem(keyId, 1);
+      addLog(`🔑 获得了${getItemName(keyId)}！`, 'loot');
     }
 
     // Chance for profession book (5%)
@@ -3610,6 +3624,12 @@ function getCustomRecipes() {
     {id:'craft_holy_essence', name:'神圣精华', result:'holy_essence', amount:1, ingredients:{crystal:3,herb:3,void_stone:1}, category:'tools', unlock:'temple'},
     {id:'craft_shadow_essence', name:'暗影精华', result:'shadow_essence', amount:1, ingredients:{void_essence:2,void_stone:2,feather:2}, category:'tools', unlock:'rogue_den'},
     {id:'craft_spirit_gem', name:'灵魂宝石', result:'spirit_gem', amount:1, ingredients:{crystal:4,void_essence:2,enchanted_core:1}, category:'tools', unlock:'mage_tower'},
+    // === 钥匙制作配方 ===
+    {id:'craft_key_blue', name:'蓝箱钥匙', result:'key_blue', amount:1, ingredients:{iron_ore:3,crystal:1}, category:'tools', unlock:'workbench'},
+    {id:'craft_key_silver', name:'银箱钥匙', result:'key_silver', amount:1, ingredients:{iron_ore:5,crystal:2}, category:'tools', unlock:'forge'},
+    {id:'craft_key_gold', name:'金箱钥匙', result:'key_gold', amount:1, ingredients:{crystal:4,void_stone:1,metal_plate:1}, category:'tools', unlock:'crystal_forge'},
+    {id:'craft_key_rainbow', name:'彩箱钥匙', result:'key_rainbow', amount:1, ingredients:{void_stone:3,void_essence:2,star_fragment:1}, category:'tools', unlock:'void_forge'},
+    {id:'craft_key_black', name:'黑箱钥匙', result:'key_black', amount:1, ingredients:{void_essence:4,chaos_core:1,star_fragment:2}, category:'tools', unlock:'void_forge'},
   ];
 }
 
@@ -4781,10 +4801,10 @@ function renderInventory() {
     let durHtml = '';
     if (def && def.durability && G.toolDurability[id] !== undefined) {
       const cur = G.toolDurability[id];
-      const max = def.durability;
+      const max = getItemMaxDurability(id) || def.durability;
       const pct = Math.round(cur/max*100);
       const color = pct > 60 ? 'var(--green)' : pct > 30 ? 'var(--yellow)' : 'var(--red)';
-      durHtml = `<div class="dur-bar"><div class="dur-bar-fill" style="width:${pct}%;background:${color}"></div></div><div class="dur-label">${cur}/${max}</div>`;
+      durHtml = `<div class="dur-bar"><div class="dur-bar-fill" style="width:${pct}%;background:${color}"></div></div><div class="dur-label">${pct}%</div>`;
     }
     html += `
       <div class="item-card grade-${grade}" onclick="showItemModal('${id}')">
