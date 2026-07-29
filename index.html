@@ -4840,9 +4840,55 @@ function renderInfo() {
     <div class="panel">
       <h3>👤 角色 Lv.${lvl} ${profGrade?`<span class="prof-grade-badge prof-grade-${profGrade}">${profGrade}级</span>`:''}</h3>
       <p>天赋：${talent ? talent.icon+' '+talent.name+' - '+talent.desc : '无'}</p>
-      <p>攻击力：${calcPlayerAtk()} | 防御力：${calcPlayerDef()} | 暴击：${Math.round(getPlayerCritChance()*100)}%</p>
-      <p>最大HP：${getPlayerMaxHp()} | 最大精神：${100+getEffectiveAttr('wis')*3}</p>
-      <p>岛屿：${G.islandSize}x${G.islandSize} | 防御：${G.defense}</p>
+    </div>
+    <div class="panel">
+      <h3>⚔️ 战斗属性</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:0.9em">
+        <p>🗡️ 攻击力：<span style="color:var(--accent)">${calcPlayerAtk()}</span></p>
+        <p>🛡️ 防御力：<span style="color:var(--accent2)">${calcPlayerDef()}</span></p>
+        <p>💥 暴击率：<span style="color:var(--gold)">${Math.round(getPlayerCritChance()*100)}%</span></p>
+        <p>💀 暴击伤害：<span style="color:var(--gold)">${Math.round(getPlayerCritDmg()*100)}%</span></p>
+        <p>💨 闪避率：<span style="color:var(--green)">${Math.round(getPlayerDodgeBonus()*100)}%</span></p>
+        <p>🧛 吸血：<span style="color:var(--purple)">${Math.round(getPlayerLifesteal()*100)}%</span></p>
+        <p>🔥 火焰伤害：<span style="color:var(--orange)">${getAffixBonuses(G.equippedWeapon||'').fireDmg||0}</span></p>
+        <p>❄️ 冰霜伤害：<span style="color:var(--blue)">${getAffixBonuses(G.equippedWeapon||'').iceDmg||0}</span></p>
+        <p>🌀 虚空伤害：<span style="color:var(--purple)">${getAffixBonuses(G.equippedWeapon||'').voidDmg||0}</span></p>
+        <p>🎯 穿透：${getAffixBonuses(G.equippedWeapon||'').armorPen||0}</p>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>❤️ 生存属性</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:0.9em">
+        <p>❤️ HP：<span style="color:var(--red)">${Math.round(G.stats.hp)}/${G.stats.maxHp}</span></p>
+        <p>🍖 饱食：<span style="color:var(--orange)">${Math.round(G.stats.hunger)}/100</span></p>
+        <p>💧 饮水：<span style="color:var(--blue)">${Math.round(G.stats.water)}/100</span></p>
+        <p>🧠 精神：<span style="color:var(--purple)">${Math.round(G.stats.mental)}/100</span></p>
+        <p>⚡ 精力：<span style="color:var(--accent2)">${Math.round(G.stats.energy||0)}/${G.stats.maxEnergy||200}</span></p>
+        <p>🔮 精神力：${G.stats.spirit||10}</p>
+        <p>⭐ 经验：${G.playerExp||0}/${G.expToNext||100}</p>
+        <p>🏗️ 岛屿防御：${G.defense}</p>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>🛡️ 装备词条加成</h3>
+      <div style="font-size:0.85em;color:var(--text2)">
+        ${(() => {
+          const allBonuses = {};
+          const slots = [G.equippedWeapon, G.equippedArmor, G.equippedHead, G.equippedTool];
+          for (const id of slots) {
+            if (!id) continue;
+            const b = getAffixBonuses(id);
+            for (const [k,v] of Object.entries(b)) {
+              if (v) allBonuses[k] = (allBonuses[k]||0) + v;
+            }
+          }
+          if (Object.keys(allBonuses).length === 0) return '<p>暂无词条加成</p>';
+          return Object.entries(allBonuses).map(([k,v]) => {
+            const names = {atk:'攻击',def:'防御',maxHp:'最大HP',critPct:'暴击率%',critDmg:'暴击伤害%',lifesteal:'吸血%',dodgePct:'闪避率%',dmgReduce:'伤害减免%',fireDmg:'火焰',iceDmg:'冰霜',voidDmg:'虚空',armorPen:'穿透',speed:'速度',acc:'命中%',gatherBonus:'采集加成%',rareChance:'稀有发现%',durBonus:'耐久加成',hpRegen:'HP回复',maxMental:'最大精神',voidRes:'虚空抗性%',luckBonus:'幸运%',fleeBonus:'逃跑率%',buildDef:'建筑防御%',hungerSlow:'饥饿减缓%',waterSlow:'饮水减缓%'};
+            return `<span style="margin-right:10px">${names[k]||k}: <span style="color:var(--green)">+${v}${k.includes('Pct')||k.includes('Dmg')||k.includes('Reduce')||k.includes('Res')||k.includes('Bonus')||k.includes('Slow')||k.includes('steal')?'%':''}</span></span>`;
+          }).join('');
+        })()}
+      </div>
     </div>
     <div class="panel">
       <h3>📊 属性分配</h3>
