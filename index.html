@@ -1409,6 +1409,8 @@ const INITIAL_ITEMS = {
 };
 
 let G = null; // game state
+let lastOperationTime = 0; // 防重复点击冷却
+const OPERATION_COOLDOWN = 500; // 500ms冷却时间
 
 function createNewState() {
   const stats = { ...INITIAL_STATS, atk: 5 + Math.floor(Math.random()*5), defense: Math.floor(Math.random()*4), spirit: 6 + Math.floor(Math.random()*10) };
@@ -3028,10 +3030,17 @@ function addLog(msg, type='') {
 
 function addInventoryItem(id, count=1) {
   if (!G.inventory[id]) G.inventory[id] = 0;
-  G.inventory[id] += count;
   const def = getItemDef(id);
   const max = def && def.max_stack ? def.max_stack : 99;
+  // 背包容量检查（最多20种不同物品）
+  const maxSlots = 20 + (G.buildings.storage ? 20 : 0) + (G.buildings.basic_storage ? 9 : 0);
+  if (!G.inventory[id] && Object.keys(G.inventory).length >= maxSlots) {
+    addLog('❌ 背包已满！无法放入更多物品', 'warning');
+    return false;
+  }
+  G.inventory[id] += count;
   if (G.inventory[id] > max) G.inventory[id] = max;
+  return true;
 }
 
 function removeInventoryItem(id, count=1) {
@@ -3505,7 +3514,7 @@ function calcPlayerDef() {
 }
 
 function playerAttack(targetIndex) {
-  if (!combatState || !combatState.playerTurn) return;
+  if (!combatState || !combatState.playerTurn || G.gameOver) return;
   const target = combatState.enemies[targetIndex];
   if (!target || target.currentHp <= 0) return;
 
@@ -4055,6 +4064,13 @@ function weightedRandom(pool) {
 // FISHING
 // ============================================================
 function startFishing() {
+  // 死亡检查
+  if (G.gameOver) return;
+  // 防重复点击
+  const now = Date.now();
+  if (now - lastOperationTime < OPERATION_COOLDOWN) return;
+  lastOperationTime = now;
+
   if (G.fishingInProgress) { addLog('⏳ 正在钓鱼...', 'warning'); return; }
   const hasRod = G.equippedRod || hasItem('fishing_rod') || hasItem('wood_rod') || hasItem('iron_rod') || hasItem('crystal_rod');
   if (!hasRod) {
@@ -4242,6 +4258,13 @@ function determineFishCatch() {
 // GATHERING / EXPLORATION
 // ============================================================
 function gatherResource(type) {
+  // 死亡检查
+  if (G.gameOver) return;
+  // 防重复点击
+  const now = Date.now();
+  if (now - lastOperationTime < OPERATION_COOLDOWN) return;
+  lastOperationTime = now;
+
   if ((G.stats.energy || 0) < 4) {
     addLog('❌ 精力不足！（需要4精力）', 'warning');
     return;
@@ -4382,6 +4405,13 @@ function gatherResource(type) {
 }
 
 function exploreIsland() {
+  // 死亡检查
+  if (G.gameOver) return;
+  // 防重复点击
+  const now = Date.now();
+  if (now - lastOperationTime < OPERATION_COOLDOWN) return;
+  lastOperationTime = now;
+
   if ((G.stats.energy || 0) < 5) {
     addLog('❌ 精力不足！（需要5精力）', 'warning');
     return;
@@ -4705,6 +4735,7 @@ function canCraft(recipe) {
 }
 
 function craftItem(recipe) {
+  if (G.gameOver) return;
   if (!canCraft(recipe)) {
     addLog('❌ 材料不足！', 'warning');
     return;
@@ -4974,6 +5005,7 @@ function doEquip(itemId, slot) {
 // USE ITEMS
 // ============================================================
 function useItem(id) {
+  if (G.gameOver) return;
   if (!hasItem(id)) return;
   const def = getItemDef(id);
   if (!def) return;
@@ -5177,6 +5209,7 @@ function renderHelp() {
 // GAME OVER & SAVE/LOAD
 // ============================================================
 function gameOver() {
+  G.gameOver = true; // 锁定所有操作
   addLog('💀 你倒在了空岛上...', 'combat');
   showModal('游戏结束', `
     <p style="text-align:center;font-size:1.2em;margin:20px 0">💀 你倒在了空岛上...</p>
