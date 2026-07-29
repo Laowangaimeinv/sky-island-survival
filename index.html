@@ -2101,6 +2101,10 @@ function tickSurvival() {
   const conSlow = getConSlowBonus();
   hungerDecay *= (1 - conSlow);
   waterDecay *= (1 - conSlow);
+  // 词条饥饿/饮水减缓
+  const allBonuses = getAllAffixBonuses();
+  hungerDecay *= (1 - (allBonuses.hungerSlow || 0) / 100);
+  waterDecay *= (1 - (allBonuses.waterSlow || 0) / 100);
 
   // Weather effects on decay
   if (G.weather === 'cold') hungerDecay *= 1.5;
@@ -2143,6 +2147,9 @@ function tickSurvival() {
   hpRegen *= professionBonus('hp_regen');
   hpRegen *= getTalentMult('mental_regen_mult',1);
   if (hasProfession('healer')) hpRegen *= 1.3;
+  // 词条HP回复
+  const allBonusesForRegen = getAllAffixBonuses();
+  hpRegen += (allBonusesForRegen.hpRegen || 0) / 100;
   G.stats.hp = Math.min(G.stats.maxHp, G.stats.hp + hpRegen);
 
   // Mental regen if safe
@@ -2315,39 +2322,52 @@ function startCombat(enemies, isDisaster=false) {
     combatState.playerTurn = true;
     addLog('⚡ 先手攻击！', 'combat');
   }
+  // 词条速度加成影响先手
+  const allBonusesForSpeed = getAllAffixBonuses();
+  if ((allBonusesForSpeed.speed || 0) > 0 && Math.random() < (allBonusesForSpeed.speed || 0) / 100) {
+    combatState.playerTurn = true;
+    addLog('⚡ 速度优势！先手攻击！', 'combat');
+  }
 
   renderCombat();
 }
 
+// 获取所有装备的词条总加成
+function getAllAffixBonuses() {
+  const total = {};
+  const slots = [G.equippedWeapon, G.equippedArmor, G.equippedHead, G.equippedTool, G.equippedRod];
+  for (const id of slots) {
+    if (!id) continue;
+    const b = getAffixBonuses(id);
+    for (const [k,v] of Object.entries(b)) {
+      if (v) total[k] = (total[k]||0) + v;
+    }
+  }
+  return total;
+}
+
 function calcPlayerAtk() {
-  let atk = G.stats.atk || 5; // base from stats
-  // v2: use Equipment class interface
+  let atk = G.stats.atk || 5;
+  const allBonuses = getAllAffixBonuses();
+  // 武器基础攻击
   const weapon = G.player ? G.player.equipment.getWeapon() : null;
   if (weapon && !weapon.isBroken) {
     atk += weapon.atk;
-    const wb = getAffixBonuses(weapon.itemId);
-    atk += wb.atk || 0;
-    atk += wb.fireDmg || 0;
-    atk += wb.iceDmg || 0;
-    atk += wb.voidDmg || 0;
-    atk += wb.armorPen || 0;
   } else if (G.equippedWeapon) {
     const wdef = getItemDef(G.equippedWeapon);
     if (wdef) atk += wdef.atk || 0;
-    const wb = getAffixBonuses(G.equippedWeapon);
-    atk += wb.atk || 0;
-    atk += wb.fireDmg || 0;
-    atk += wb.iceDmg || 0;
-    atk += wb.voidDmg || 0;
-    atk += wb.armorPen || 0;
   }
+  // 词条攻击加成
+  atk += allBonuses.atk || 0;
+  atk += allBonuses.fireDmg || 0;
+  atk += allBonuses.iceDmg || 0;
+  atk += allBonuses.voidDmg || 0;
+  atk += allBonuses.armorPen || 0;
   // STR attribute bonus
   atk += getEffectiveAttr('str') * 2;
-  // 全属性加成天赋
+  // 天赋加成
   atk *= getTalentMult('allStatsMult', 1);
-  // 攻击力加成天赋
   atk *= getTalentMult('atkMult', 1);
-  // 武器伤害天赋
   atk *= getTalentMult('weapon_dmg_mult', 1);
   // 元素伤害天赋
   atk += getTalentEffect('fireDmg', 0);
@@ -2358,79 +2378,68 @@ function calcPlayerAtk() {
   atk += getTalentEffect('lightningDmg', 0);
   atk += getTalentEffect('chaosDmg', 0);
   atk += getTalentEffect('shadowDmg', 0);
-  // 夜间攻击加成
   if (!isDaytime()) atk *= (1 + getTalentEffect('nightAtkMult', 0));
-  // 暴风雨攻击加成
   if (G.weather === 'stormy') atk *= (1 + getTalentEffect('stormAtkMult', 0));
-  // Hunter void dmg bonus
   if (hasProfession('hunter')) atk *= 1.2;
   return Math.floor(atk);
 }
 
 function getPlayerCritChance() {
-  let cc = 0.05; // base 5%
+  let cc = 0.05;
   cc += getEffectiveAttr('dex') * 0.01;
-  // 暴击天赋
   cc += getTalentEffect('critBonus', 0);
-  // Equipment affixes
-  const weaponId = G.player ? (G.player.equipment.getWeapon()?.itemId) : G.equippedWeapon;
-  if (weaponId) {
-    const wb = getAffixBonuses(weaponId);
-    cc += (wb.critPct || 0) / 100;
-  }
+  // 词条暴击加成（所有装备）
+  const allBonuses = getAllAffixBonuses();
+  cc += (allBonuses.critPct || 0) / 100;
   return Math.min(0.8, cc);
 }
 
 function getPlayerCritDmg() {
-  let cd = 1.8; // base 180%
-  // 暴击伤害天赋
+  let cd = 1.8;
   cd += getTalentEffect('critDmgBonus', 0);
-  const weaponId = G.player ? (G.player.equipment.getWeapon()?.itemId) : G.equippedWeapon;
-  if (weaponId) {
-    const wb = getAffixBonuses(weaponId);
-    cd += (wb.critDmg || 0) / 100;
-  }
+  // 词条暴击伤害加成（所有装备）
+  const allBonuses = getAllAffixBonuses();
+  cd += (allBonuses.critDmg || 0) / 100;
   return cd;
 }
 
 function getPlayerLifesteal() {
   let ls = 0;
-  // 吸血天赋
   ls += getTalentEffect('lifesteal', 0);
-  const weaponId = G.player ? (G.player.equipment.getWeapon()?.itemId) : G.equippedWeapon;
-  if (weaponId) {
-    const wb = getAffixBonuses(weaponId);
-    ls += (wb.lifesteal || 0) / 100;
-  }
+  // 词条吸血加成（所有装备）
+  const allBonuses = getAllAffixBonuses();
+  ls += (allBonuses.lifesteal || 0) / 100;
   return ls;
 }
 
 function getPlayerDodgeBonus() {
   let dodge = 0;
-  // 闪避天赋
   dodge += getTalentEffect('dodgePct', 0);
-  const armorId = G.player ? (G.player.equipment.getArmor()?.itemId) : G.equippedArmor;
-  const headId = G.player ? (G.player.equipment.getHelmet()?.itemId) : G.equippedHead;
-  if (armorId) { const ab = getAffixBonuses(armorId); dodge += (ab.dodgePct || 0) / 100; }
-  if (headId) { const hb = getAffixBonuses(headId); dodge += (hb.dodgePct || 0) / 100; }
+  // 词条闪避加成（所有装备）
+  const allBonuses = getAllAffixBonuses();
+  dodge += (allBonuses.dodgePct || 0) / 100;
   return dodge;
 }
 
 function getPlayerMaxHpBonus() {
-  let bonus = 0;
-  const armorId = G.player ? (G.player.equipment.getArmor()?.itemId) : G.equippedArmor;
-  const headId = G.player ? (G.player.equipment.getHelmet()?.itemId) : G.equippedHead;
-  if (armorId) { const ab = getAffixBonuses(armorId); bonus += ab.maxHp || 0; }
-  if (headId) { const hb = getAffixBonuses(headId); bonus += hb.maxHp || 0; }
-  return bonus;
+  // 词条HP加成（所有装备）
+  const allBonuses = getAllAffixBonuses();
+  return allBonuses.maxHp || 0;
 }
 
 function getPlayerMaxHp() {
   let hp = G.stats.maxHp || 100;
-  // 最大HP天赋
   hp *= getTalentMult('maxHpMult', 1);
   hp += getPlayerMaxHpBonus();
   return Math.floor(hp);
+}
+
+// 获取最大精神值（含词条加成）
+function getMaxMental() {
+  let maxMental = 100;
+  const allBonuses = getAllAffixBonuses();
+  maxMental += allBonuses.maxMental || 0;
+  return maxMental;
 }
 
 function calcPlayerDef() {
@@ -2441,40 +2450,21 @@ function calcPlayerDef() {
     if (G.equippedArmor) {
       const adef = getItemDef(G.equippedArmor);
       if (adef) def += adef.def || 0;
-      const ab = getAffixBonuses(G.equippedArmor);
-      def += ab.def || 0;
-      def += ab.dmgReduce || 0;
-      def += ab.buildDef || 0;
     }
     if (G.equippedHead) {
       const hdef = getItemDef(G.equippedHead);
       if (hdef) def += hdef.def || 0;
-      const hb = getAffixBonuses(G.equippedHead);
-      def += hb.def || 0;
-      def += hb.dmgReduce || 0;
     }
   }
-  if (G.player) {
-    const armor = G.player.equipment.getArmor();
-    const helmet = G.player.equipment.getHelmet();
-    if (armor && !armor.isBroken) {
-      const ab = getAffixBonuses(armor.itemId);
-      def += ab.dmgReduce || 0;
-      def += ab.buildDef || 0;
-    }
-    if (helmet && !helmet.isBroken) {
-      const hb = getAffixBonuses(helmet.itemId);
-      def += hb.dmgReduce || 0;
-    }
-  }
+  // 词条防御加成（所有装备）
+  const allBonuses = getAllAffixBonuses();
+  def += allBonuses.def || 0;
+  def += allBonuses.dmgReduce || 0;
+  def += allBonuses.buildDef || 0;
   def += getTalentEffect('defense', 0);
-  // 防御力加成天赋
   def *= getTalentMult('defMult', 1);
-  // 伤害减免天赋
   def += Math.floor(def * getTalentEffect('dmgReduce', 0));
-  // 全抗性天赋
   def += Math.floor(def * getTalentEffect('allResist', 0));
-  // Guardian bonus
   if (hasProfession('guardian')) def *= 1.25;
   if (combatState) def *= combatState.tempDefMult || 1;
   return Math.floor(def);
@@ -2505,6 +2495,9 @@ function playerAttack(targetIndex) {
 
   // Mental miss chance
   let missChance = G.stats.mental <= 0 ? 0.4 : (G.stats.mental < 20 ? 0.15 : 0);
+  // 词条命中加成
+  const allBonusesForAtk = getAllAffixBonuses();
+  missChance *= (1 - (allBonusesForAtk.acc || 0) / 100);
   if (Math.random() < missChance) {
     combatState.log.push(`你因精神恍惚，攻击落空了！`);
     addLog('🌀 攻击落空！（精神过低）', 'combat');
@@ -2613,6 +2606,9 @@ function playerFlee() {
   if (!combatState || !combatState.playerTurn) return;
   combatState.turn++;
   let fleeChance = 0.4 + (hasProfession('hunter') ? 0.12 : 0) + getTalentEffect('flee_bonus', 0);
+  // 词条逃跑率加成
+  const allBonusesForFlee = getAllAffixBonuses();
+  fleeChance += (allBonusesForFlee.fleeBonus || 0) / 100;
   if (combatState.isDisaster) fleeChance -= 0.2;
   if (Math.random() < fleeChance) {
     addLog('🏃 逃跑成功！', 'system');
@@ -2695,6 +2691,9 @@ function enemyTurn() {
     // 元素抗性天赋
     if (enemy.name.includes('虚空')) {
       dmg = Math.floor(dmg * (1 - getTalentEffect('void_resist', 0)));
+      // 词条虚空抗性
+      const allBonusesForResist = getAllAffixBonuses();
+      dmg = Math.floor(dmg * (1 - (allBonusesForResist.voidRes || 0) / 100));
       if (hasProfession('skywalker')) dmg = Math.floor(dmg * 0.5);
     }
     if (enemy.name.includes('火')) dmg = Math.floor(dmg * (1 - getTalentEffect('fireResist', 0)));
@@ -3170,7 +3169,6 @@ function determineFishCatch() {
 // GATHERING / EXPLORATION
 // ============================================================
 function gatherResource(type) {
-  // 精力检查
   if ((G.stats.energy || 0) < 4) {
     addLog('❌ 精力不足！（需要4精力）', 'warning');
     return;
@@ -3179,7 +3177,10 @@ function gatherResource(type) {
   renderStatusBar();
 
   const gatherMult = getTalentMult('gather_mult', 1) * (hasProfession('pioneer') ? 1.2 : 1);
-  const harvestBonus = combatState && combatState.doubleHarvest ? 2 : 1;
+  // 词条采集加成
+  const allBonusesForGather = getAllAffixBonuses();
+  const affixGatherBonus = 1 + (allBonusesForGather.gatherBonus || 0) / 100;
+  const harvestBonus = (combatState && combatState.doubleHarvest ? 2 : 1) * affixGatherBonus;
 
   // Weather bonuses
   let weatherMult = 1;
@@ -3284,6 +3285,15 @@ function gatherResource(type) {
     const rId = rare[Math.floor(Math.random()*rare.length)];
     addInventoryItem(rId, 1);
     results.push(`${getItemName(rId)} x1（稀有发现！）`);
+  }
+
+  // 词条稀有发现加成
+  const rareChanceBonus = (allBonusesForGather.rareChance || 0) / 100 + (allBonusesForGather.luckBonus || 0) / 100;
+  if (rareChanceBonus > 0 && Math.random() < rareChanceBonus) {
+    const rare2 = ['crystal','iron_ore','herb','copper_ore'];
+    const rId2 = rare2[Math.floor(Math.random()*rare2.length)];
+    addInventoryItem(rId2, 1);
+    results.push(`${getItemName(rId2)} x1（幸运发现！）`);
   }
 
   // Crit gather (talent)
@@ -5089,7 +5099,7 @@ function renderInfo() {
         <p>❤️ HP：<span style="color:var(--red)">${Math.round(G.stats.hp)}/${G.stats.maxHp}</span></p>
         <p>🍖 饱食：<span style="color:var(--orange)">${Math.round(G.stats.hunger)}/100</span></p>
         <p>💧 饮水：<span style="color:var(--blue)">${Math.round(G.stats.water)}/100</span></p>
-        <p>🧠 精神：<span style="color:var(--purple)">${Math.round(G.stats.mental)}/100</span></p>
+        <p>🧠 精神：<span style="color:var(--purple)">${Math.round(G.stats.mental)}/${getMaxMental()}</span></p>
         <p>⚡ 精力：<span style="color:var(--accent2)">${Math.round(G.stats.energy||0)}/${G.stats.maxEnergy||200}</span></p>
         <p>🔮 精神力：${G.stats.spirit||10}</p>
         <p>⭐ 经验：${G.playerExp||0}/${G.expToNext||100}</p>
