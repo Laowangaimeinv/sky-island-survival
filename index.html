@@ -662,60 +662,119 @@ button:active {
 .save-indicator.show { opacity: 1; }
 
 /* Responsive - 像素风适配 */
+/* ===== Mobile Responsive ===== */
 @media (max-width: 768px) {
+  body { font-size: 13px; }
   .status-bar {
     grid-template-columns: repeat(2, 1fr);
-    gap: 6px 12px;
-    padding: 10px 12px;
-  }
-  .stat-bar-wrap { width: 60px; }
-  .nav-tab {
-    padding: 10px 16px;
+    gap: 4px 8px;
+    padding: 8px 10px;
     font-size: 12px;
   }
-  .tab-panel { padding: 12px; }
+  .stat-bar-wrap { width: 50px; height: 6px; }
+  .nav-tabs {
+    gap: 0;
+    padding: 0 4px;
+  }
+  .nav-tab {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+  .tab-panel { padding: 10px 8px; }
   .log-panel {
-    height: 150px;
-    margin: 0 6px 6px 6px;
-    padding: 10px 12px;
+    height: 120px;
+    margin: 0 4px 4px 4px;
+    padding: 8px 10px;
+    font-size: 11px;
   }
-  .panel { padding: 16px; margin-bottom: 12px; }
+  .panel { padding: 12px 10px; margin-bottom: 10px; }
+  .panel h3 { font-size: 13px; }
   .action-grid {
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-    gap: 10px;
-  }
-  .item-grid {
-    grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: 8px;
   }
-  .building-grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  .action-btn { padding: 8px; font-size: 12px; }
+  .item-grid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 6px;
   }
+  .item-card { padding: 6px; font-size: 11px; }
+  .item-card .item-icon { font-size: 1.4em; }
+  .building-grid {
+    grid-template-columns: 1fr;
+  }
+  .modal-box { padding: 16px; margin: 8px; }
+  .modal-box h3 { font-size: 14px; }
+  .modal-actions button { padding: 10px; font-size: 12px; }
+  .combat-screen { padding: 12px; }
+  .combat-actions { gap: 6px; }
+  .combat-actions button { padding: 8px 12px; font-size: 12px; }
+  .time-info { font-size: 11px; gap: 6px; }
+  .equip-mini { font-size: 10px; }
+  .recipe-item { padding: 8px; font-size: 12px; }
+  .sub-tab { padding: 5px 10px; font-size: 11px; }
+  .garden-grid { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
+  .garden-plot { font-size: 11px; }
+  .expand-section { padding: 10px; }
+  .island-size { font-size: 1.2em; }
+  .attr-grid { grid-template-columns: 1fr; }
+  .attr-item { padding: 6px; font-size: 12px; }
+  .free-points { padding: 6px; font-size: 12px; }
+  .quick-actions { gap: 4px; }
+  .quick-btn { padding: 6px 10px; font-size: 11px; }
+  .ach-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+  .help-section h4 { font-size: 13px; }
+  .help-section p, .help-section li { font-size: 12px; }
 }
 
 @media (max-width: 480px) {
+  body { font-size: 12px; }
   .status-bar {
-    grid-template-columns: 1fr;
-    gap: 4px;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px 6px;
+    padding: 6px 8px;
   }
+  .stat-item { font-size: 11px; }
+  .stat-bar-wrap { width: 40px; height: 5px; }
   .time-info {
+    grid-column: 1 / -1;
     justify-content: center;
-  }
-  #title-screen h1 { font-size: 22px; }
-  .title-btn {
-    padding: 14px 32px;
-    font-size: 14px;
+    font-size: 10px;
+    gap: 4px;
+    flex-wrap: wrap;
   }
   .nav-tab {
-    padding: 8px 12px;
-    font-size: 11px;
+    padding: 6px 8px;
+    font-size: 10px;
+  }
+  #title-screen h1 { font-size: 20px; }
+  .title-btn {
+    padding: 12px 28px;
+    font-size: 13px;
+    width: 80%;
+    max-width: 250px;
   }
   .action-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
   }
+  .action-btn { padding: 8px 6px; font-size: 11px; }
   .item-grid {
     grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
   }
+  .item-card { padding: 5px; font-size: 10px; }
+  .item-card .item-icon { font-size: 1.2em; }
+  .item-card .item-count { font-size: 9px; }
+  .log-panel { height: 100px; font-size: 10px; }
+  .panel { padding: 10px 8px; }
+  .combat-enemy { padding: 12px; }
+  .combat-enemy .enemy-icon { font-size: 2em; }
+  .combat-actions button { padding: 6px 10px; font-size: 11px; }
+  .modal-box { padding: 12px; }
+  .recipe-item { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .talent-grid { grid-template-columns: 1fr; }
+  .garden-grid { grid-template-columns: repeat(3, 1fr); }
 }
 .save-indicator {
   position:fixed; top:10px; right:10px; padding:4px 12px; border-radius:12px;
