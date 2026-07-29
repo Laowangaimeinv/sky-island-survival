@@ -563,8 +563,16 @@ class EquipItem {
   }
   get name() { return this.itemData.name || this.itemId; }
   get isBroken() { return this.durability === 0; }
-  get atk() { return this.itemData.atk || 0; }
-  get def() { return this.itemData.def || 0; }
+  get atk() {
+    const base = this.itemData.atk || 0;
+    const mult = getGradeStatMult(this.grade);
+    return Math.floor(base * mult);
+  }
+  get def() {
+    const base = this.itemData.def || 0;
+    const mult = getGradeStatMult(this.grade);
+    return Math.floor(base * mult);
+  }
   
   // 应用词条耐久加成
   applyAffixDurBonus() {
@@ -1124,6 +1132,22 @@ function getItemGrade(id) {
   if (G.itemGrades && G.itemGrades[id]) return G.itemGrades[id];
   const def = getItemDef(id);
   return def ? (def.grade || 'F') : 'F';
+}
+
+// 获取品质属性倍率
+function getGradeStatMult(grade) {
+  const config = GAME_DATA.items.grade_config[grade];
+  return config ? (config.stat_mult || 1.0) : 1.0;
+}
+
+// 获取物品实际属性（含品质倍率）
+function getItemStat(id, statName) {
+  const def = getItemDef(id);
+  if (!def) return 0;
+  const base = def[statName] || 0;
+  const grade = getItemGrade(id);
+  const mult = getGradeStatMult(grade);
+  return Math.floor(base * mult);
 }
 
 function getItemName(id) {
@@ -2398,10 +2422,9 @@ function calcPlayerAtk() {
   // 武器基础攻击
   const weapon = G.player ? G.player.equipment.getWeapon() : null;
   if (weapon && !weapon.isBroken) {
-    atk += weapon.atk;
+    atk += weapon.atk; // EquipItem.atk already includes grade multiplier
   } else if (G.equippedWeapon) {
-    const wdef = getItemDef(G.equippedWeapon);
-    if (wdef) atk += wdef.atk || 0;
+    atk += getItemStat(G.equippedWeapon, 'atk'); // includes grade multiplier
   }
   // 词条攻击加成
   atk += allBonuses.atk || 0;
@@ -2491,15 +2514,13 @@ function getMaxMental() {
 function calcPlayerDef() {
   let def = 0;
   if (G.player) {
-    def = G.player.equipment.getTotalDef();
+    def = G.player.equipment.getTotalDef(); // includes grade multiplier
   } else {
     if (G.equippedArmor) {
-      const adef = getItemDef(G.equippedArmor);
-      if (adef) def += adef.def || 0;
+      def += getItemStat(G.equippedArmor, 'def');
     }
     if (G.equippedHead) {
-      const hdef = getItemDef(G.equippedHead);
-      if (hdef) def += hdef.def || 0;
+      def += getItemStat(G.equippedHead, 'def');
     }
   }
   // 词条防御加成（所有装备）
@@ -3909,23 +3930,28 @@ function useItem(id) {
     renderAll();
     return;
   }
-  // Food/consumables
+  // Food/consumables (with grade multiplier)
   if (def.type === 'food' || def.type === 'consumable' || def.type === 'potion') {
+    const gradeMult = getGradeStatMult(getItemGrade(id));
     if (def.heal) {
-      G.stats.hp = Math.min(G.stats.maxHp, G.stats.hp + def.heal);
-      addLog(`💚 使用${def.name}，HP+${def.heal}`, 'good');
+      const heal = Math.floor(def.heal * gradeMult);
+      G.stats.hp = Math.min(G.stats.maxHp, G.stats.hp + heal);
+      addLog(`💚 使用${def.name}，HP+${heal}`, 'good');
     }
     if (def.hunger_restore) {
-      G.stats.hunger = Math.min(100, G.stats.hunger + def.hunger_restore);
-      addLog(`🍖 食用${def.name}，饱食度+${def.hunger_restore}`, 'good');
+      const hunger = Math.floor(def.hunger_restore * gradeMult);
+      G.stats.hunger = Math.min(100, G.stats.hunger + hunger);
+      addLog(`🍖 食用${def.name}，饱食度+${hunger}`, 'good');
     }
     if (def.water_restore) {
-      G.stats.water = Math.min(100, G.stats.water + def.water_restore);
-      addLog(`💧 饮用${def.name}，饮水+${def.water_restore}`, 'good');
+      const water = Math.floor(def.water_restore * gradeMult);
+      G.stats.water = Math.min(100, G.stats.water + water);
+      addLog(`💧 饮用${def.name}，饮水+${water}`, 'good');
     }
     if (def.mana_restore) {
-      G.stats.mental = Math.min(100, G.stats.mental + def.mana_restore);
-      addLog(`✨ 使用${def.name}，精神+${def.mana_restore}`, 'good');
+      const mana = Math.floor(def.mana_restore * gradeMult);
+      G.stats.mental = Math.min(100, G.stats.mental + mana);
+      addLog(`✨ 使用${def.name}，精神+${mana}`, 'good');
     }
     removeInventoryItem(id);
     if (id === 'void_fish') { G._ateVoidFish = true; checkAchievements(); }
@@ -5525,11 +5551,13 @@ function showItemModal(id) {
   actions += `<button onclick="discardItem('${id}')" style="background:var(--red);color:#fff">🗑️ 丢弃</button>`;
 
   const stats = [];
-  if (def.atk) stats.push(`攻击 +${def.atk}`);
-  if (def.def) stats.push(`防御 +${def.def}`);
-  if (def.heal) stats.push(`恢复 ${def.heal} HP`);
-  if (def.hunger_restore) stats.push(`饱食 +${def.hunger_restore}`);
-  if (def.water_restore) stats.push(`饮水 +${def.water_restore}`);
+  // 显示实际属性（含品质倍率）
+  const gradeMult = getGradeStatMult(grade);
+  if (def.atk) { const v = Math.floor(def.atk * gradeMult); stats.push(`攻击 +${v}${gradeMult > 1 ? '(品质加成)' : ''}`); }
+  if (def.def) { const v = Math.floor(def.def * gradeMult); stats.push(`防御 +${v}${gradeMult > 1 ? '(品质加成)' : ''}`); }
+  if (def.heal) { const v = Math.floor(def.heal * gradeMult); stats.push(`恢复 ${v} HP${gradeMult > 1 ? '(品质加成)' : ''}`); }
+  if (def.hunger_restore) { const v = Math.floor(def.hunger_restore * gradeMult); stats.push(`饱食 +${v}${gradeMult > 1 ? '(品质加成)' : ''}`); }
+  if (def.water_restore) { const v = Math.floor(def.water_restore * gradeMult); stats.push(`饮水 +${v}${gradeMult > 1 ? '(品质加成)' : ''}`); }
   if (def.durability) stats.push(`耐久 ${def.durability}`);
   if (def.power) stats.push(`力量 ${def.power}`);
 
