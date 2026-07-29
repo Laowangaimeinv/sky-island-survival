@@ -4131,12 +4131,17 @@ function startGameClock() {
   clockTimer = setInterval(() => {
     if (!G || !G.gameStarted) return;
     // 现实1天 = 游戏1周: 每秒+7秒
+    const prevHour = G.hour || 0;
     G.second = (G.second || 0) + 7;
     while (G.second >= 60) { G.second -= 60; G.minute = (G.minute || 0) + 1; }
     while (G.minute >= 60) { G.minute -= 60; G.hour = (G.hour || 0) + 1; }
     while (G.hour >= 24) { G.hour -= 24; G.day++; checkDailyEvents(); }
-    // 每秒恢复精力
-    regenEnergy();
+    // 游戏时间每过1小时恢复精力（而不是现实时间）
+    const curHour = G.hour || 0;
+    if (curHour !== prevHour) {
+      regenEnergy();
+      tickSurvival();
+    }
     // 检查并卸下损坏的装备
     unequipBrokenItems();
     // Update clock and energy display
