@@ -3739,22 +3739,36 @@ function craftItem(recipe) {
   const amount = recipe.amount || 1;
   addInventoryItem(recipe.result, amount);
 
-  // Generate affixes for equipment
+  // 天赋制作品质提升（对所有制作生效）
   const resultDef = getItemDef(recipe.result);
+  const talentQualityUp = getTalentEffect('craftQualityUp', 0);
+  const profQualityUp = hasProfession('smith') ? 1 : 0;
+  const totalQualityUp = talentQualityUp + profQualityUp;
+  if (totalQualityUp > 0 && resultDef) {
+    const gradeOrder = ['F','E','D','C','B','A','S','SS','SSS'];
+    const currentGrade = resultDef.grade || 'F';
+    const currentIdx = gradeOrder.indexOf(currentGrade);
+    const newIdx = Math.min(currentIdx + totalQualityUp, gradeOrder.length - 1);
+    const newGrade = gradeOrder[newIdx];
+    if (newGrade !== currentGrade) {
+      addLog(`  ⬆️ 品质提升：${currentGrade} → ${newGrade}`, 'good');
+    }
+  }
+
+  // 材料节省天赋
+  if (materialSave > 0 && Math.random() < materialSave) {
+    addLog(`  💰 节省了材料！`, 'good');
+  }
+
+  // Generate affixes for equipment
   if (resultDef && ['weapon','armor','tool'].includes(resultDef.type)) {
     let grade = resultDef.grade || 'F';
-    // 天赋制作品质提升
-    const talentQualityUp = getTalentEffect('craftQualityUp', 0);
-    const profQualityUp = hasProfession('smith') ? 1 : 0;
-    const totalQualityUp = talentQualityUp + profQualityUp;
+    // 品质提升应用到装备
     if (totalQualityUp > 0) {
       const gradeOrder = ['F','E','D','C','B','A','S','SS','SSS'];
       const currentIdx = gradeOrder.indexOf(grade);
       const newIdx = Math.min(currentIdx + totalQualityUp, gradeOrder.length - 1);
       grade = gradeOrder[newIdx];
-      if (grade !== resultDef.grade) {
-        addLog(`  ⬆️ 品质提升：${resultDef.grade} → ${grade}`, 'good');
-      }
     }
 
     // 天赋耐久加成
