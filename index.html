@@ -4131,15 +4131,19 @@ function startGameClock() {
   clockTimer = setInterval(() => {
     if (!G || !G.gameStarted) return;
     // 现实1天 = 游戏1周: 每秒+7秒
-    const prevHour = G.hour || 0;
+    const prevMinute = G.minute || 0;
     G.second = (G.second || 0) + 7;
     while (G.second >= 60) { G.second -= 60; G.minute = (G.minute || 0) + 1; }
     while (G.minute >= 60) { G.minute -= 60; G.hour = (G.hour || 0) + 1; }
     while (G.hour >= 24) { G.hour -= 24; G.day++; checkDailyEvents(); }
-    // 游戏时间每过1小时恢复精力（而不是现实时间）
-    const curHour = G.hour || 0;
-    if (curHour !== prevHour) {
+    // 游戏时间每过1分钟恢复精力
+    const curMinute = G.minute || 0;
+    if (curMinute !== prevMinute) {
       regenEnergy();
+    }
+    // 每小时触发生存tick
+    const prevH = prevMinute;
+    if (G.hour !== (G.hour || 0) || curMinute === 0) {
       tickSurvival();
     }
     // 检查并卸下损坏的装备
@@ -4251,23 +4255,23 @@ function switchTab(id) {
 function regenEnergy() {
   // 精力上限公式：160 + 精神×3 + 等级×2
   G.stats.maxEnergy = 160 + (G.stats.spirit||10) * 3 + (G.playerLevel||1) * 2;
-  // 精力恢复公式：15 + 精神×0.5 + 上限×0.02（每小时）
+  // 精力恢复公式：每小时恢复 15 + 精神×0.5 + 上限×0.02
   let regenPerHour = 15 + (G.stats.spirit||10) * 0.5 + G.stats.maxEnergy * 0.02;
   // 饱食度/饮水度影响精力恢复
   const hunger = G.stats.hunger || 0;
   const water = G.stats.water || 0;
   if (hunger <= 0 || water <= 0) {
-    regenPerHour = 0; // 饥饿或干渴时不恢复精力
+    regenPerHour = 0;
   } else if (hunger < 30 || water < 30) {
-    regenPerHour *= 0.3; // 低于30时恢复大幅减少
+    regenPerHour *= 0.3;
   } else if (hunger < 50 || water < 50) {
-    regenPerHour *= 0.6; // 低于50时恢复减少
+    regenPerHour *= 0.6;
   }
   // 天赋加成
   regenPerHour *= getTalentMult('energyRegenMult', 1);
-  // 转换为每秒恢复
-  const regenPerSecond = regenPerHour / 3600;
-  G.stats.energy = Math.min(G.stats.maxEnergy, G.stats.energy + regenPerSecond);
+  // 每分钟恢复 = 每小时恢复 / 60
+  const regenPerMinute = regenPerHour / 60;
+  G.stats.energy = Math.min(G.stats.maxEnergy, G.stats.energy + regenPerMinute);
 }
 function renderAll() {
   renderStatusBar();
