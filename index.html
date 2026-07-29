@@ -1119,6 +1119,13 @@ function getItemDef(id) {
   return custom[id] || null;
 }
 
+// 获取物品实际品质（考虑品质提升天赋）
+function getItemGrade(id) {
+  if (G.itemGrades && G.itemGrades[id]) return G.itemGrades[id];
+  const def = getItemDef(id);
+  return def ? (def.grade || 'F') : 'F';
+}
+
 function getItemName(id) {
   const def = getItemDef(id);
   return def ? def.name : id;
@@ -3744,14 +3751,18 @@ function craftItem(recipe) {
   const talentQualityUp = getTalentEffect('craftQualityUp', 0);
   const profQualityUp = hasProfession('smith') ? 1 : 0;
   const totalQualityUp = talentQualityUp + profQualityUp;
+  let finalGrade = resultDef ? (resultDef.grade || 'F') : 'F';
   if (totalQualityUp > 0 && resultDef) {
     const gradeOrder = ['F','E','D','C','B','A','S','SS','SSS'];
-    const currentGrade = resultDef.grade || 'F';
-    const currentIdx = gradeOrder.indexOf(currentGrade);
+    const currentIdx = gradeOrder.indexOf(finalGrade);
     const newIdx = Math.min(currentIdx + totalQualityUp, gradeOrder.length - 1);
     const newGrade = gradeOrder[newIdx];
-    if (newGrade !== currentGrade) {
-      addLog(`  ⬆️ 品质提升：${currentGrade} → ${newGrade}`, 'good');
+    if (newGrade !== finalGrade) {
+      finalGrade = newGrade;
+      addLog(`  ⬆️ 品质提升：${resultDef.grade || 'F'} → ${newGrade}`, 'good');
+      // 存储物品的实际品质（覆盖默认品质）
+      if (!G.itemGrades) G.itemGrades = {};
+      G.itemGrades[recipe.result] = newGrade;
     }
   }
 
@@ -3762,14 +3773,8 @@ function craftItem(recipe) {
 
   // Generate affixes for equipment
   if (resultDef && ['weapon','armor','tool'].includes(resultDef.type)) {
-    let grade = resultDef.grade || 'F';
-    // 品质提升应用到装备
-    if (totalQualityUp > 0) {
-      const gradeOrder = ['F','E','D','C','B','A','S','SS','SSS'];
-      const currentIdx = gradeOrder.indexOf(grade);
-      const newIdx = Math.min(currentIdx + totalQualityUp, gradeOrder.length - 1);
-      grade = gradeOrder[newIdx];
-    }
+    // 使用已计算的finalGrade（含品质提升）
+    let grade = finalGrade;
 
     // 天赋耐久加成
     const durabilityMult = getTalentMult('durabilityMult', 1);
@@ -4898,7 +4903,7 @@ function renderInventory() {
 
   for (const [id, count] of items) {
     const def = getItemDef(id);
-    const grade = def?.grade || 'F';
+    const grade = getItemGrade(id);
     const name = def?.name || id;
     // Durability bar for tools/weapons/armor
     let durHtml = '';
@@ -5049,7 +5054,7 @@ function renderStorage() {
   // Storage items
   for (const [id, count] of storageItems) {
     const def = getItemDef(id);
-    const grade = def?.grade || 'F';
+    const grade = getItemGrade(id);
     html += `
       <div class="item-card grade-${grade}" onclick="showStorageModal('${id}','retrieve')">
         <div class="item-icon">${getItemIcon(id)}</div>
@@ -5075,7 +5080,7 @@ function renderStorage() {
   `;
   for (const [id, count] of invItems) {
     const def = getItemDef(id);
-    const grade = def?.grade || 'F';
+    const grade = getItemGrade(id);
     html += `
       <div class="item-card grade-${grade}" onclick="showStorageModal('${id}','store')">
         <div class="item-icon">${getItemIcon(id)}</div>
@@ -5494,7 +5499,7 @@ function showItemModal(id) {
   const def = getItemDef(id);
   if (!def) return;
   const count = G.inventory[id] || 0;
-  const grade = def.grade || 'F';
+  const grade = getItemGrade(id);
   const gradeInfo = GAME_DATA.items.grade_config[grade] || {name:'凡品',color:'⬜'};
 
   let actions = '';
