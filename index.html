@@ -79,8 +79,8 @@ html, body { height:100%; overflow:hidden; }
 /* 字体设置 - 中文优化 */
 body {
   font-family: var(--font-cn);
-  background:var(--bg);
-  color:var(--text);
+  background: var(--bg);
+  color: var(--text);
   font-size: 14px;
   line-height: 1.6;
   /* 全面屏安全边距 */
@@ -88,6 +88,10 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
+  /* 背景图 */
+  background-image: url('assets/bg.png');
+  background-size: cover;
+  background-blend-mode: overlay;
 }
 
 /* 英文/数字使用像素字体 */
@@ -138,10 +142,9 @@ button:active {
 #title-screen {
   flex-direction:column; align-items:center; justify-content:center;
   background: #0f0c29;
-  background-image: 
-    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-  background-size: 32px 32px;
+  background-image: url('assets/bg1.png');
+  background-size: cover;
+  background-blend-mode: overlay;
 }
 #title-screen h1 {
   font-size: 28px; 
@@ -2110,9 +2113,22 @@ function getItemName(id) {
   return def ? def.name : id;
 }
 
+// 图片资源映射
+const ITEM_IMAGE_MAP = {
+  wood:'wood.png', stone:'stone.png',
+  icon_axe:'icon_axe.png', icon_pickaxe:'icon_pickaxe.png',
+  icon_sword:'icon_sword.png', icon_fish:'icon_fish.png',
+  icon_apple:'icon_apple.png',
+  heart:'heart.png', hunger:'hunger.png',
+  box:'box.png', gold:'gold.png',
+};
+
 function getItemIcon(id) {
   const def = getItemDef(id);
   if (!def) return '📦';
+  // 优先使用图片资源
+  const imgFile = ITEM_IMAGE_MAP[id];
+  if (imgFile) return `<img src="assets/${imgFile}" style="width:24px;height:24px;vertical-align:middle" onerror="this.style.display='none'">`;
   const icons = {
     wood:'🪵', stone:'🪨', fiber:'🌿', iron_ore:'⛏️', crystal:'💎', herb:'🌿',
     meat:'🥩', leather:'🧶', feather:'🪶', void_stone:'🌀', wheat_seed:'🌾',
