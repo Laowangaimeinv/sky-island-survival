@@ -2147,9 +2147,9 @@ function tickSurvival() {
   hpRegen *= professionBonus('hp_regen');
   hpRegen *= getTalentMult('mental_regen_mult',1);
   if (hasProfession('healer')) hpRegen *= 1.3;
-  // 词条HP回复
+  // 词条HP回复（直接加值，不除100）
   const allBonusesForRegen = getAllAffixBonuses();
-  hpRegen += (allBonusesForRegen.hpRegen || 0) / 100;
+  hpRegen += (allBonusesForRegen.hpRegen || 0);
   G.stats.hp = Math.min(G.stats.maxHp, G.stats.hp + hpRegen);
 
   // Mental regen if safe
@@ -2487,7 +2487,10 @@ function playerAttack(targetIndex) {
 
   combatState.turn++;
   let atk = calcPlayerAtk();
-  // v2: use player crit stats (matches Python combat.player_attack)
+  // 狂战士被动加成
+  if (combatState.berserkerAtkBoost) {
+    atk = Math.floor(atk * combatState.berserkerAtkBoost);
+  }
   let critChance = getPlayerCritChance() + (combatState.guaranteedCrit ? 0.9 : 0);
   let isCrit = Math.random() < critChance;
   let critMult = getPlayerCritDmg();
@@ -4132,6 +4135,7 @@ function startGameClock() {
     if (!G || !G.gameStarted) return;
     // 现实1天 = 游戏1周: 每秒+7秒
     const prevMinute = G.minute || 0;
+    const prevHour = G.hour || 0;
     G.second = (G.second || 0) + 7;
     while (G.second >= 60) { G.second -= 60; G.minute = (G.minute || 0) + 1; }
     while (G.minute >= 60) { G.minute -= 60; G.hour = (G.hour || 0) + 1; }
@@ -4142,9 +4146,17 @@ function startGameClock() {
       regenEnergy();
     }
     // 每小时触发生存tick
-    const prevH = prevMinute;
-    if (G.hour !== (G.hour || 0) || curMinute === 0) {
+    const curHour = G.hour || 0;
+    if (curHour !== prevHour) {
       tickSurvival();
+      updateWeather();
+      checkDisasters();
+      G.totalTurns = (G.totalTurns || 0) + 1;
+      // Auto save every 50 turns
+      if (G.totalTurns - (G.lastAutoSave || 0) >= 50) {
+        saveGame();
+        G.lastAutoSave = G.totalTurns;
+      }
     }
     // 检查并卸下损坏的装备
     unequipBrokenItems();
