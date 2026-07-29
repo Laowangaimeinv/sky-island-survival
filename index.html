@@ -3792,15 +3792,17 @@ function craftItem(recipe) {
 // ============================================================
 function learnProfession(bookId) {
   const def = getItemDef(bookId);
-  if (!def || def.type !== 'profession_book') return;
-  const profId = def.profession;
+  if (!def) return;
+  // 支持 profession_book 和 profession_scroll 两种类型
+  const profId = def.profession || def.profession_id;
+  if (!profId) return;
   if (G.professions.includes(profId)) {
-    addLog(`ℹ️ 你已经学会了${PROFESSIONS[profId].name}！`, 'warning');
+    addLog(`ℹ️ 你已经学会了${PROFESSIONS[profId]?.name || profId}！`, 'warning');
     return;
   }
   G.professions.push(profId);
   removeInventoryItem(bookId);
-  addLog(`📖 学会了新职业：${PROFESSIONS[profId].name}（${PROFESSIONS[profId].desc}）`, 'good');
+  addLog(`📖 学会了新职业：${PROFESSIONS[profId]?.name || profId}（${PROFESSIONS[profId]?.desc || ''}）`, 'good');
   renderInfo();
   renderAll();
 }
@@ -3855,8 +3857,8 @@ function useItem(id) {
   const def = getItemDef(id);
   if (!def) return;
 
-  // Profession books
-  if (def.type === 'profession_book') {
+  // Profession books and scrolls
+  if (def.type === 'profession_book' || def.type === 'profession_scroll') {
     learnProfession(id);
     return;
   }
@@ -5484,7 +5486,7 @@ function showItemModal(id) {
   let actions = '';
   // Use button
   if (def.type === 'food' || def.type === 'consumable' || def.type === 'potion' ||
-      def.type === 'profession_book' || def.type === 'skill_book' || def.type === 'blueprint' ||
+      def.type === 'profession_book' || def.type === 'profession_scroll' || def.type === 'skill_book' || def.type === 'blueprint' ||
       def.type === 'seed' || id === 'expand_voucher') {
     actions += `<button onclick="useItem('${id}');hideModal();renderAll()" style="background:var(--green);color:#fff">使用</button>`;
   }
