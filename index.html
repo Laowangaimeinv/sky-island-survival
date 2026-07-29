@@ -1422,10 +1422,11 @@ function getExpToNext(level) {
 }
 
 function addExp(amount) {
+  // 经验加成天赋
+  amount = Math.floor(amount * getTalentMult('expMult', 1));
   G.playerExp = (G.playerExp || 0) + amount;
   addLog(`✨ 获得 ${amount} 经验值`, 'good');
 
-  // Check for level ups (can multi-level)
   while (G.playerExp >= (G.expToNext || 100)) {
     G.playerExp -= G.expToNext;
     G.playerLevel = (G.playerLevel || 1) + 1;
@@ -2001,6 +2002,8 @@ function tickSurvival() {
   if (!isDaytime()) mentalDecay += 0.4;
   // Mental resist from talent
   if (getTalentEffect('weather_resist',0) > 0) mentalDecay *= (1 - getTalentEffect('weather_resist',0));
+  // 精神消耗天赋
+  mentalDecay *= getTalentMult('mentalDecayMult', 1);
   G.stats.mental = Math.max(0, G.stats.mental - mentalDecay);
 
   // HP drain from hunger/water at 0
@@ -2202,11 +2205,10 @@ function startCombat(enemies, isDisaster=false) {
 
 function calcPlayerAtk() {
   let atk = G.stats.atk || 5; // base from stats
-  // v2: use Equipment class interface (matches Python player.equipment.get_weapon())
+  // v2: use Equipment class interface
   const weapon = G.player ? G.player.equipment.getWeapon() : null;
   if (weapon && !weapon.isBroken) {
     atk += weapon.atk;
-    // Weapon affixes
     const wb = getAffixBonuses(weapon.itemId);
     atk += wb.atk || 0;
     atk += wb.fireDmg || 0;
@@ -2214,7 +2216,6 @@ function calcPlayerAtk() {
     atk += wb.voidDmg || 0;
     atk += wb.armorPen || 0;
   } else if (G.equippedWeapon) {
-    // Legacy fallback
     const wdef = getItemDef(G.equippedWeapon);
     if (wdef) atk += wdef.atk || 0;
     const wb = getAffixBonuses(G.equippedWeapon);
@@ -2224,10 +2225,27 @@ function calcPlayerAtk() {
     atk += wb.voidDmg || 0;
     atk += wb.armorPen || 0;
   }
-  // STR attribute bonus (with profession boost)
+  // STR attribute bonus
   atk += getEffectiveAttr('str') * 2;
-  // Combat master talent
+  // 全属性加成天赋
+  atk *= getTalentMult('allStatsMult', 1);
+  // 攻击力加成天赋
+  atk *= getTalentMult('atkMult', 1);
+  // 武器伤害天赋
   atk *= getTalentMult('weapon_dmg_mult', 1);
+  // 元素伤害天赋
+  atk += getTalentEffect('fireDmg', 0);
+  atk += getTalentEffect('iceDmg', 0);
+  atk += getTalentEffect('voidDmgBonus', 0);
+  atk += getTalentEffect('darkDmg', 0);
+  atk += getTalentEffect('lightDmg', 0);
+  atk += getTalentEffect('lightningDmg', 0);
+  atk += getTalentEffect('chaosDmg', 0);
+  atk += getTalentEffect('shadowDmg', 0);
+  // 夜间攻击加成
+  if (!isDaytime()) atk *= (1 + getTalentEffect('nightAtkMult', 0));
+  // 暴风雨攻击加成
+  if (G.weather === 'stormy') atk *= (1 + getTalentEffect('stormAtkMult', 0));
   // Hunter void dmg bonus
   if (hasProfession('hunter')) atk *= 1.2;
   return Math.floor(atk);
@@ -2236,7 +2254,9 @@ function calcPlayerAtk() {
 function getPlayerCritChance() {
   let cc = 0.05; // base 5%
   cc += getEffectiveAttr('dex') * 0.01;
-  // v2: use Equipment class
+  // 暴击天赋
+  cc += getTalentEffect('critBonus', 0);
+  // Equipment affixes
   const weaponId = G.player ? (G.player.equipment.getWeapon()?.itemId) : G.equippedWeapon;
   if (weaponId) {
     const wb = getAffixBonuses(weaponId);
@@ -2247,6 +2267,8 @@ function getPlayerCritChance() {
 
 function getPlayerCritDmg() {
   let cd = 1.8; // base 180%
+  // 暴击伤害天赋
+  cd += getTalentEffect('critDmgBonus', 0);
   const weaponId = G.player ? (G.player.equipment.getWeapon()?.itemId) : G.equippedWeapon;
   if (weaponId) {
     const wb = getAffixBonuses(weaponId);
@@ -2257,6 +2279,8 @@ function getPlayerCritDmg() {
 
 function getPlayerLifesteal() {
   let ls = 0;
+  // 吸血天赋
+  ls += getTalentEffect('lifesteal', 0);
   const weaponId = G.player ? (G.player.equipment.getWeapon()?.itemId) : G.equippedWeapon;
   if (weaponId) {
     const wb = getAffixBonuses(weaponId);
@@ -2267,6 +2291,8 @@ function getPlayerLifesteal() {
 
 function getPlayerDodgeBonus() {
   let dodge = 0;
+  // 闪避天赋
+  dodge += getTalentEffect('dodgePct', 0);
   const armorId = G.player ? (G.player.equipment.getArmor()?.itemId) : G.equippedArmor;
   const headId = G.player ? (G.player.equipment.getHelmet()?.itemId) : G.equippedHead;
   if (armorId) { const ab = getAffixBonuses(armorId); dodge += (ab.dodgePct || 0) / 100; }
@@ -2283,13 +2309,19 @@ function getPlayerMaxHpBonus() {
   return bonus;
 }
 
+function getPlayerMaxHp() {
+  let hp = G.stats.maxHp || 100;
+  // 最大HP天赋
+  hp *= getTalentMult('maxHpMult', 1);
+  hp += getPlayerMaxHpBonus();
+  return Math.floor(hp);
+}
+
 function calcPlayerDef() {
-  // v2: use Equipment class getTotalDef() (matches Python player.equipment.get_total_def())
   let def = 0;
   if (G.player) {
     def = G.player.equipment.getTotalDef();
   } else {
-    // Legacy fallback
     if (G.equippedArmor) {
       const adef = getItemDef(G.equippedArmor);
       if (adef) def += adef.def || 0;
@@ -2306,9 +2338,7 @@ function calcPlayerDef() {
       def += hb.dmgReduce || 0;
     }
   }
-  // Add affix bonuses from equipped items
   if (G.player) {
-    const weapon = G.player.equipment.getWeapon();
     const armor = G.player.equipment.getArmor();
     const helmet = G.player.equipment.getHelmet();
     if (armor && !armor.isBroken) {
@@ -2322,6 +2352,12 @@ function calcPlayerDef() {
     }
   }
   def += getTalentEffect('defense', 0);
+  // 防御力加成天赋
+  def *= getTalentMult('defMult', 1);
+  // 伤害减免天赋
+  def += Math.floor(def * getTalentEffect('dmgReduce', 0));
+  // 全抗性天赋
+  def += Math.floor(def * getTalentEffect('allResist', 0));
   // Guardian bonus
   if (hasProfession('guardian')) def *= 1.25;
   if (combatState) def *= combatState.tempDefMult || 1;
@@ -2505,19 +2541,33 @@ function enemyTurn() {
     return;
   }
 
+  // 狂战士天赋: HP每损失10%攻击+X%
+  const berserkerBonus = getTalentEffect('berserkerAtkPer10Pct', 0);
+  if (berserkerBonus > 0) {
+    const hpLostPct = 1 - (G.stats.hp / (G.stats.maxHp || 100));
+    const atkBoost = 1 + Math.floor(hpLostPct * 10) * berserkerBonus;
+    combatState.berserkerAtkBoost = atkBoost;
+  }
+
   for (const enemy of alive) {
     if (enemy.stunned) { enemy.stunned = false; continue; }
 
     let atk = enemy.atk || 5;
-    // Guardian monster dmg reduction
     if (hasProfession('guardian')) atk = Math.floor(atk * 0.82);
-    // Taunt
     if (combatState.tauntActive) atk = Math.floor(atk * 0.7);
 
     let def = calcPlayerDef();
     let dmg = Math.max(1, atk - def);
 
-    // v2: Dodge from equipment (matches Python combat)
+    // 格挡天赋
+    const blockChance = getTalentEffect('blockChance', 0);
+    if (blockChance > 0 && Math.random() < blockChance) {
+      dmg = Math.floor(dmg * 0.5);
+      combatState.log.push(`你格挡了${enemy.name}的攻击，伤害减半！`);
+      addLog(`🛡️ 格挡！伤害减半`, 'good');
+    }
+
+    // Dodge
     let dodgeChance = combatState.dodgeBonus || 0;
     dodgeChance += getPlayerDodgeBonus();
     if (Math.random() < dodgeChance) {
@@ -2526,11 +2576,19 @@ function enemyTurn() {
       continue;
     }
 
-    // Void resistance talent
+    // 元素抗性天赋
     if (enemy.name.includes('虚空')) {
       dmg = Math.floor(dmg * (1 - getTalentEffect('void_resist', 0)));
       if (hasProfession('skywalker')) dmg = Math.floor(dmg * 0.5);
     }
+    if (enemy.name.includes('火')) dmg = Math.floor(dmg * (1 - getTalentEffect('fireResist', 0)));
+    if (enemy.name.includes('冰')) dmg = Math.floor(dmg * (1 - getTalentEffect('iceResist', 0)));
+    if (enemy.name.includes('暗')) dmg = Math.floor(dmg * (1 - getTalentEffect('darkResist', 0)));
+    dmg = Math.floor(dmg * (1 - getTalentEffect('elementResist', 0)));
+    dmg = Math.floor(dmg * (1 - getTalentEffect('allResist', 0)));
+
+    // 伤害减免天赋
+    dmg = Math.floor(dmg * (1 - getTalentEffect('dmgReduce', 0)));
 
     G.stats.hp -= dmg;
     combatState.log.push(`${enemy.name}攻击你，造成${dmg}点伤害！`);
@@ -2613,6 +2671,14 @@ function combatVictory() {
   if (!combatState) return;
   let exp = 0;
   let lootText = [];
+
+  // 击杀回复天赋
+  const killHealPct = getTalentEffect('killHealPct', 0);
+  if (killHealPct > 0) {
+    const heal = Math.floor((G.stats.maxHp || 100) * killHealPct);
+    G.stats.hp = Math.min(G.stats.maxHp || 100, G.stats.hp + heal);
+    addLog(`💚 击杀回复${heal}HP`, 'good');
+  }
 
   for (const enemy of combatState.enemies) {
     exp += enemy.reward_exp || 10;
@@ -2897,7 +2963,9 @@ function startFishing() {
     }
 
     // Chance for chest (35% - fishing is main chest source) - 存入背包
-    if (Math.random() < 0.35) {
+    // 宝箱掉落天赋
+    let chestChance = 0.35 + getTalentEffect('chestDropBonus', 0) + getTalentEffect('globalLuck', 0);
+    if (Math.random() < chestChance) {
       const tier = rollChestTier();
       openChest(tier);
     }
@@ -2943,6 +3011,11 @@ function determineFishCatch() {
     const baitDef = getItemDef(G.equippedBait);
     if (baitDef && baitDef.quality_bonus) qualityBonus = baitDef.quality_bonus;
   }
+
+  // 钓鱼天赋加成
+  const fishBonus = getTalentEffect('fishSuccessMult', 0);
+  const rareFishBonus = getTalentEffect('rareFishBonus', 0);
+  qualityBonus += fishBonus + rareFishBonus;
 
   // Night fishing: rarer fish
   const isNight = !isDaytime();
@@ -3044,29 +3117,31 @@ function gatherResource(type) {
   }
 
   let items = [];
+  // 采集天赋加成
+  const woodMult = 1 + getTalentEffect('woodMult', 0);
+  const mineMult = 1 + getTalentEffect('mineMult', 0);
+  const herbMult = 1 + getTalentEffect('herbGatherMult', 0);
+
   switch(type) {
     case 'wood':
-      // 需要斧头
       if (!hasTool('axe')) {
         addLog('❌ 没有斧头无法砍树！请先制作一把斧头。', 'warning');
         return;
       }
-      items = [{id:'wood', min:2, max:5+toolBonus}];
+      items = [{id:'wood', min:2, max:Math.floor((5+toolBonus)*woodMult)}];
       if (Math.random() < 0.2) items.push({id:'fine_wood', min:1, max:1});
       break;
     case 'stone':
-      // 需要镐
       if (!hasTool('pickaxe')) {
         addLog('❌ 没有镐无法采矿！请先制作一把镐。', 'warning');
         return;
       }
-      items = [{id:'stone', min:2, max:4+toolBonus}];
+      items = [{id:'stone', min:2, max:Math.floor((4+toolBonus)*mineMult)}];
       if (Math.random() < 0.15) items.push({id:'iron_ore', min:1, max:2});
       if (Math.random() < 0.08) items.push({id:'copper_ore', min:1, max:1});
       break;
     case 'herb':
-      // 草药可以徒手采集
-      items = [{id:'herb', min:1, max:3}];
+      items = [{id:'herb', min:1, max:Math.floor(3*herbMult)}];
       if (hasProfession('healer')) items[0].max += 2;
       if (Math.random() < 0.1) items.push({id:'herb_seed', min:1, max:1});
       break;
@@ -3108,7 +3183,6 @@ function gatherResource(type) {
 }
 
 function exploreIsland() {
-  // 精力检查
   if ((G.stats.energy || 0) < 5) {
     addLog('❌ 精力不足！（需要5精力）', 'warning');
     return;
@@ -3116,10 +3190,14 @@ function exploreIsland() {
   G.stats.energy -= 5;
   renderStatusBar();
 
+  // 探索效率天赋
+  const exploreMult = 1 + getTalentEffect('exploreEffMult', 0);
+  const rareEventBonus = getTalentEffect('rareEventBonus', 0);
+
   const events = GAME_DATA.events.exploration_events;
   if (!events || events.length === 0) {
     addLog('🔍 探索了一番，没有发现什么特别的。', 'system');
-    addExp(5 + Math.floor(Math.random()*5));
+    addExp(Math.floor((5 + Math.floor(Math.random()*5)) * exploreMult));
     return;
   }
 
@@ -3129,7 +3207,7 @@ function exploreIsland() {
     const loot = [];
     if (evt.rewards) {
       for (const [itemId, range] of Object.entries(evt.rewards)) {
-        const count = range[0] + Math.floor(Math.random()*(range[1]-range[0]+1));
+        const count = Math.floor((range[0] + Math.floor(Math.random()*(range[1]-range[0]+1))) * exploreMult);
         addInventoryItem(itemId, count);
         loot.push(`${getItemName(itemId)} x${count}`);
       }
@@ -5294,6 +5372,9 @@ function checkRandomEncounter() {
   // Weather effects on encounter rate
   if (G.weather === 'foggy') chance *= 1.2;
   if (G.weather === 'void_storm') chance *= 2;
+
+  // 遇敌率降低天赋
+  chance *= (1 - getTalentEffect('encounterReduce', 0));
 
   if (Math.random() > chance) return;
 
