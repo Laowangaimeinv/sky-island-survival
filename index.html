@@ -562,25 +562,423 @@ button:active {
 
 /* Quick action bar */
 .quick-actions { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
-.quick-btn { padding:8px 14px; border-radius:6px; font-size:0.85em; background:var(--bg3); border:1px solid var(--border); color:var(--text); cursor:pointer; transition:all 0.15s; }
-.quick-btn:hover { border-color:var(--accent2); background:#1a4a7a; }
+.quick-btn { padding:8px 14px; font-size:0.8em; background:var(--bg3); border:4px solid var(--border); color:var(--text); cursor:pointer; transition:all 0.1s; text-transform: uppercase; }
+.quick-btn:hover { border-color:var(--gold); background:var(--accent); transform: translateY(-2px); box-shadow: 0 4px 0 #000; }
 
-/* Toast notification */
-.toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); padding:10px 24px; border-radius:8px; font-size:0.9em; z-index:999; animation:toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards; pointer-events:none; }
-.toast.good { background:var(--green); color:#fff; }
-.toast.bad { background:var(--red); color:#fff; }
-.toast.info { background:var(--accent2); color:#fff; }
+/* Toast notification - 像素风 */
+.toast { 
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%); 
+  padding:12px 24px; 
+  border:4px solid var(--border);
+  font-size:0.8em; z-index:999; 
+  animation:toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards; 
+  pointer-events:none;
+  text-transform: uppercase;
+}
+.toast.good { background:var(--green); border-color:var(--green); color:#fff; }
+.toast.bad { background:var(--red); border-color:var(--red); color:#fff; }
+.toast.info { background:var(--accent2); border-color:var(--accent2); color:#fff; }
 @keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(20px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
 @keyframes toastOut { from{opacity:1} to{opacity:0} }
+
+/* ===== 像素图标系统 ===== */
+/* 使用CSS伪元素创建简单像素图标 */
+.pixel-icon {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+  position: relative;
+  vertical-align: middle;
+}
+
+/* 像素图标 - 物品类 */
+.pixel-icon.wood { background: linear-gradient(135deg, #8B4513 25%, #A0522D 25%, #A0522D 50%, #8B4513 50%, #8B4513 75%, #A0522D 75%); background-size: 8px 8px; }
+.pixel-icon.stone { background: linear-gradient(135deg, #696969 25%, #808080 25%, #808080 50%, #696969 50%, #696969 75%, #808080 75%); background-size: 8px 8px; }
+.pixel-icon.herb { background: linear-gradient(135deg, #228B22 25%, #32CD32 25%, #32CD32 50%, #228B22 50%, #228B22 75%, #32CD32 75%); background-size: 8px 8px; }
+.pixel-icon.iron { background: linear-gradient(135deg, #708090 25%, #A9A9A9 25%, #A9A9A9 50%, #708090 50%, #708090 75%, #A9A9A9 75%); background-size: 8px 8px; }
+.pixel-icon.crystal { background: linear-gradient(135deg, #9370DB 25%, #BA55D3 25%, #BA55D3 50%, #9370DB 50%, #9370DB 75%, #BA55D3 75%); background-size: 8px 8px; animation: crystalGlow 2s ease-in-out infinite; }
+@keyframes crystalGlow {
+  0%, 100% { box-shadow: 0 0 5px rgba(147,112,219,0.5); }
+  50% { box-shadow: 0 0 15px rgba(147,112,219,0.8); }
+}
+
+/* 像素图标 - 武器类 */
+.pixel-icon.sword { background: linear-gradient(to bottom, #C0C0C0 0%, #C0C0C0 60%, #8B4513 60%, #8B4513 100%); border: 2px solid #808080; }
+.pixel-icon.axe { background: linear-gradient(to right, #8B4513 40%, #C0C0C0 40%, #C0C0C0 100%); border: 2px solid #808080; }
+.pixel-icon.pickaxe { background: linear-gradient(135deg, #C0C0C0 50%, #8B4513 50%); border: 2px solid #808080; }
+.pixel-icon.bow { background: linear-gradient(to right, #8B4513 30%, #D2691E 30%, #D2691E 70%, #8B4513 70%); border-radius: 50% 50% 0 0; }
+
+/* 像素图标 - 装备类 */
+.pixel-icon.armor { background: linear-gradient(135deg, #708090 25%, #A9A9A9 25%, #A9A9A9 50%, #708090 50%, #708090 75%, #A9A9A9 75%); background-size: 8px 8px; border: 3px solid #4A4A4A; }
+.pixel-icon.helmet { background: linear-gradient(to bottom, #708090 70%, #A9A9A9 70%); border: 3px solid #4A4A4A; border-radius: 50% 50% 0 0; }
+.pixel-icon.shield { background: linear-gradient(135deg, #708090 25%, #A9A9A9 25%, #A9A9A9 50%, #708090 50%, #708090 75%, #A9A9A9 75%); background-size: 8px 8px; border: 4px solid #4A4A4A; border-radius: 0 0 50% 50%; }
+
+/* 像素图标 - 消耗品类 */
+.pixel-icon.potion { background: linear-gradient(to bottom, transparent 20%, #FF4444 20%, #FF4444 80%, #8B0000 80%); border: 3px solid #4A4A4A; border-radius: 0 0 30% 30%; }
+.pixel-icon.food { background: linear-gradient(135deg, #DEB887 25%, #D2B48C 25%, #D2B48C 50%, #DEB887 50%, #DEB887 75%, #D2B48C 75%); background-size: 8px 8px; border-radius: 50%; }
+.pixel-icon.key { background: linear-gradient(to bottom, #FFD700 50%, #DAA520 50%); border: 3px solid #B8860B; border-radius: 50% 50% 0 0; }
+.pixel-icon.chest { background: linear-gradient(to bottom, #8B4513 50%, #A0522D 50%); border: 4px solid #654321; position: relative; }
+.pixel-icon.chest::after { content: ''; position: absolute; top: 40%; left: 40%; width: 20%; height: 20%; background: #FFD700; border: 2px solid #DAA520; }
+
+/* ===== 战斗动画系统 ===== */
+.combat-arena {
+  position: relative;
+  min-height: 200px;
+  background: linear-gradient(180deg, #1a0a2e 0%, #0a0a1e 100%);
+  border: 4px solid var(--border);
+  overflow: hidden;
+}
+
+/* 玩家角色 */
+.player-sprite {
+  position: absolute;
+  left: 20%;
+  bottom: 20%;
+  width: 48px;
+  height: 48px;
+  background: var(--accent2);
+  border: 4px solid var(--gold);
+  transition: all 0.3s;
+}
+
+/* 敌人角色 */
+.enemy-sprite {
+  position: absolute;
+  right: 20%;
+  bottom: 20%;
+  width: 48px;
+  height: 48px;
+  background: var(--red);
+  border: 4px solid #8B0000;
+  transition: all 0.3s;
+}
+
+/* 攻击动画 - 玩家 */
+@keyframes playerAttack {
+  0% { transform: translateX(0); }
+  30% { transform: translateX(80px); }
+  50% { transform: translateX(80px) scale(1.2); }
+  70% { transform: translateX(80px); }
+  100% { transform: translateX(0); }
+}
+
+.player-sprite.attacking {
+  animation: playerAttack 0.6s ease-in-out;
+}
+
+/* 攻击动画 - 敌人 */
+@keyframes enemyAttack {
+  0% { transform: translateX(0); }
+  30% { transform: translateX(-80px); }
+  50% { transform: translateX(-80px) scale(1.2); }
+  70% { transform: translateX(-80px); }
+  100% { transform: translateX(0); }
+}
+
+.enemy-sprite.attacking {
+  animation: enemyAttack 0.6s ease-in-out;
+}
+
+/* 受击动画 */
+@keyframes hitShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-10px); }
+  40% { transform: translateX(10px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(5px); }
+}
+
+.hit-shake {
+  animation: hitShake 0.4s ease-in-out;
+}
+
+/* 伤害数字飘字 */
+.damage-number {
+  position: absolute;
+  font-size: 1.5em;
+  font-weight: bold;
+  color: var(--red);
+  text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+  animation: damageFloat 1s ease-out forwards;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.damage-number.critical {
+  color: var(--gold);
+  font-size: 2em;
+  animation: damageFloatCritical 1.2s ease-out forwards;
+}
+
+.damage-number.heal {
+  color: var(--green);
+}
+
+@keyframes damageFloat {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  50% { opacity: 1; transform: translateY(-40px) scale(1.2); }
+  100% { opacity: 0; transform: translateY(-80px) scale(0.8); }
+}
+
+@keyframes damageFloatCritical {
+  0% { opacity: 1; transform: translateY(0) scale(0.5); }
+  30% { opacity: 1; transform: translateY(-20px) scale(1.5); }
+  60% { opacity: 1; transform: translateY(-40px) scale(1.2); }
+  100% { opacity: 0; transform: translateY(-80px) scale(0.8); }
+}
+
+/* 闪避动画 */
+@keyframes dodge {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-30px); }
+  100% { transform: translateY(0); }
+}
+
+.dodge-animation {
+  animation: dodge 0.4s ease-out;
+}
+
+/* 暴击闪光 */
+@keyframes critFlash {
+  0% { box-shadow: 0 0 0 0 rgba(255,215,0,0.8); }
+  50% { box-shadow: 0 0 30px 20px rgba(255,215,0,0.4); }
+  100% { box-shadow: 0 0 0 0 rgba(255,215,0,0); }
+}
+
+.crit-flash {
+  animation: critFlash 0.5s ease-out;
+}
+
+/* ===== 钓鱼动画系统 ===== */
+.fishing-scene {
+  position: relative;
+  height: 200px;
+  background: linear-gradient(180deg, #87CEEB 0%, #4A90D9 40%, #2E5B8A 100%);
+  border: 4px solid var(--border);
+  overflow: hidden;
+}
+
+/* 水面波纹 */
+.water-waves {
+  position: absolute;
+  bottom: 40%;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: repeating-linear-gradient(90deg, 
+    transparent 0px, 
+    rgba(255,255,255,0.3) 10px, 
+    transparent 20px
+  );
+  animation: waveMove 3s linear infinite;
+}
+
+@keyframes waveMove {
+  0% { background-position: 0 0; }
+  100% { background-position: 100px 0; }
+}
+
+/* 鱼竿 */
+.fishing-rod {
+  position: absolute;
+  left: 30%;
+  bottom: 60%;
+  width: 100px;
+  height: 4px;
+  background: linear-gradient(to right, #8B4513, #D2691E);
+  transform-origin: left center;
+  transform: rotate(-30deg);
+}
+
+/* 鱼线 */
+.fishing-line {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 2px;
+  height: 80px;
+  background: #FFFFFF;
+  transform-origin: top center;
+}
+
+/* 鱼钩 */
+.fishing-hook {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 12px;
+  border: 3px solid #C0C0C0;
+  border-radius: 0 0 50% 50%;
+  border-top: none;
+}
+
+/* 浮漂 */
+.fishing-float {
+  position: absolute;
+  bottom: 35%;
+  left: 60%;
+  width: 16px;
+  height: 24px;
+  background: linear-gradient(to bottom, #FF4444 50%, #FFFFFF 50%);
+  border: 2px solid #8B0000;
+  border-radius: 50% 50% 0 0;
+  animation: floatBob 2s ease-in-out infinite;
+}
+
+@keyframes floatBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* 鱼上钩动画 */
+@keyframes fishBite {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  20% { transform: translateY(-15px) rotate(-10deg); }
+  40% { transform: translateY(5px) rotate(5deg); }
+  60% { transform: translateY(-10px) rotate(-5deg); }
+  80% { transform: translateY(3px) rotate(2deg); }
+}
+
+.fishing-float.biting {
+  animation: fishBite 0.5s ease-in-out 3;
+  background: linear-gradient(to bottom, #FF0000 50%, #FFFF00 50%);
+}
+
+/* 钓到鱼动画 */
+@keyframes catchFish {
+  0% { transform: translateY(0) scale(1); }
+  30% { transform: translateY(-50px) scale(1.2); }
+  60% { transform: translateY(-30px) scale(1.1); }
+  100% { transform: translateY(-100px) scale(0); opacity: 0; }
+}
+
+.fish-caught {
+  animation: catchFish 1s ease-out forwards;
+}
+
+/* 鱼精灵 */
+.fish-sprite {
+  position: absolute;
+  width: 32px;
+  height: 16px;
+  background: linear-gradient(to right, #4A90D9, #6BB5FF);
+  border-radius: 50% 50% 0 0;
+  border: 2px solid #2E5B8A;
+}
+
+.fish-sprite::after {
+  content: '';
+  position: absolute;
+  right: -8px;
+  top: 2px;
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(135deg, #4A90D9 50%, transparent 50%);
+}
+
+/* 品质边框动画 - 更华丽 */
+@keyframes gradeAPulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(249,115,22,0.5), inset 0 0 10px rgba(249,115,22,0.1); }
+  50% { box-shadow: 0 0 20px rgba(249,115,22,0.8), inset 0 0 20px rgba(249,115,22,0.2); }
+}
+
+@keyframes gradeSPulse {
+  0%, 100% { box-shadow: 0 0 15px rgba(239,68,68,0.6), inset 0 0 15px rgba(239,68,68,0.1); }
+  50% { box-shadow: 0 0 30px rgba(239,68,68,1), inset 0 0 30px rgba(239,68,68,0.3); }
+}
+
+@keyframes gradeSSShine {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.item-card.grade-A { animation: gradeAPulse 2s ease-in-out infinite; }
+.item-card.grade-S { animation: gradeSPulse 1.5s ease-in-out infinite; }
+.item-card.grade-SSS {
+  background: linear-gradient(90deg, #000 0%, #1a1a3e 25%, #FFD700 50%, #1a1a3e 75%, #000 100%);
+  background-size: 200% 100%;
+  animation: gradeSSShine 3s linear infinite, gradeSSSGlow 0.8s ease-in-out infinite;
+}
+
+/* 战斗伤害特效 */
+@keyframes slashEffect {
+  0% { opacity: 0; transform: scale(0.5) rotate(-45deg); }
+  50% { opacity: 1; transform: scale(1.2) rotate(0deg); }
+  100% { opacity: 0; transform: scale(1.5) rotate(45deg); }
+}
+
+.slash-effect {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border: 4px solid var(--gold);
+  border-radius: 50%;
+  animation: slashEffect 0.4s ease-out forwards;
+  pointer-events: none;
+}
+
+/* 火焰特效 */
+@keyframes fireEffect {
+  0% { opacity: 0; transform: scale(0.5); }
+  50% { opacity: 1; transform: scale(1.2); filter: brightness(1.5); }
+  100% { opacity: 0; transform: scale(2); }
+}
+
+.fire-effect {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background: radial-gradient(circle, #FF4444, #FF8800, transparent);
+  border-radius: 50%;
+  animation: fireEffect 0.5s ease-out forwards;
+  pointer-events: none;
+}
+
+/* 冰冻特效 */
+@keyframes iceEffect {
+  0% { opacity: 0; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.1); filter: brightness(1.3); }
+  100% { opacity: 0; transform: scale(1.3); }
+}
+
+.ice-effect {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  background: radial-gradient(circle, #FFFFFF, #88DDFF, transparent);
+  border-radius: 50%;
+  animation: iceEffect 0.5s ease-out forwards;
+  pointer-events: none;
+}
+
+/* 虚空特效 */
+@keyframes voidEffect {
+  0% { opacity: 0; transform: scale(0.5) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.3) rotate(180deg); }
+  100% { opacity: 0; transform: scale(2) rotate(360deg); }
+}
+
+.void-effect {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  background: radial-gradient(circle, #7C3AED, #4C1D95, transparent);
+  border-radius: 50%;
+  animation: voidEffect 0.6s ease-out forwards;
+  pointer-events: none;
+}
 </style>
 </head>
 <body>
 
 <div id="title-screen" class="screen active">
-  <h1>🏝️ 空岛求生</h1>
+  <h1>空岛求生</h1>
   <h2>Sky Island Survival</h2>
-  <button class="title-btn" onclick="startNewGame()">🎮 新游戏</button>
-  <button class="title-btn secondary" onclick="loadGame()">📂 继续游戏</button>
+  <button class="title-btn" onclick="startNewGame()">新游戏</button>
+  <button class="title-btn secondary" onclick="loadGame()">继续游戏</button>
 </div>
 
 <div id="talent-screen" class="screen">
@@ -5928,6 +6326,317 @@ document.addEventListener('keydown', (e) => {
 document.getElementById('modal-overlay').addEventListener('click', (e) => {
   if (e.target === document.getElementById('modal-overlay')) hideModal();
 });
+
+// ============================================================
+// 动画系统 - 像素风战斗/钓鱼特效
+// ============================================================
+
+/**
+ * 播放攻击动画
+ * @param {string} attacker - 'player' 或 'enemy'
+ * @param {boolean} isCritical - 是否暴击
+ */
+function playAttackAnimation(attacker, isCritical = false) {
+  const sprite = document.querySelector(`.${attacker}-sprite`);
+  if (!sprite) return;
+  
+  // 添加攻击动画类
+  sprite.classList.add('attacking');
+  
+  // 攻击动画结束后移除
+  setTimeout(() => {
+    sprite.classList.remove('attacking');
+  }, 600);
+  
+  // 暴击闪光效果
+  if (isCritical) {
+    sprite.classList.add('crit-flash');
+    setTimeout(() => sprite.classList.remove('crit-flash'), 500);
+  }
+}
+
+/**
+ * 播放受击动画
+ * @param {string} target - 'player' 或 'enemy'
+ */
+function playHitAnimation(target) {
+  const sprite = document.querySelector(`.${target}-sprite`);
+  if (!sprite) return;
+  
+  sprite.classList.add('hit-shake');
+  setTimeout(() => sprite.classList.remove('hit-shake'), 400);
+}
+
+/**
+ * 显示伤害数字
+ * @param {number} damage - 伤害值
+ * @param {string} target - 'player' 或 'enemy'
+ * @param {boolean} isCritical - 是否暴击
+ * @param {boolean} isHeal - 是否治疗
+ */
+function showDamageNumber(damage, target, isCritical = false, isHeal = false) {
+  const arena = document.querySelector('.combat-arena');
+  if (!arena) return;
+  
+  const sprite = document.querySelector(`.${target}-sprite`);
+  if (!sprite) return;
+  
+  const dmgEl = document.createElement('div');
+  dmgEl.className = 'damage-number';
+  if (isCritical) dmgEl.classList.add('critical');
+  if (isHeal) dmgEl.classList.add('heal');
+  
+  dmgEl.textContent = isHeal ? `+${damage}` : `-${damage}`;
+  
+  // 定位到目标精灵上方
+  const rect = sprite.getBoundingClientRect();
+  const arenaRect = arena.getBoundingClientRect();
+  dmgEl.style.left = `${rect.left - arenaRect.left + rect.width/2}px`;
+  dmgEl.style.top = `${rect.top - arenaRect.top - 20}px`;
+  
+  arena.appendChild(dmgEl);
+  
+  // 动画结束后移除
+  setTimeout(() => dmgEl.remove(), isCritical ? 1200 : 1000);
+}
+
+/**
+ * 播放技能特效
+ * @param {string} effectType - 特效类型: 'slash', 'fire', 'ice', 'void'
+ * @param {string} target - 'player' 或 'enemy'
+ */
+function playSkillEffect(effectType, target) {
+  const arena = document.querySelector('.combat-arena');
+  if (!arena) return;
+  
+  const sprite = document.querySelector(`.${target}-sprite`);
+  if (!sprite) return;
+  
+  const effect = document.createElement('div');
+  effect.className = `${effectType}-effect`;
+  
+  const rect = sprite.getBoundingClientRect();
+  const arenaRect = arena.getBoundingClientRect();
+  effect.style.left = `${rect.left - arenaRect.left}px`;
+  effect.style.top = `${rect.top - arenaRect.top}px`;
+  
+  arena.appendChild(effect);
+  
+  // 特效结束后移除
+  const duration = effectType === 'void' ? 600 : 500;
+  setTimeout(() => effect.remove(), duration);
+}
+
+/**
+ * 播放闪避动画
+ * @param {string} target - 'player' 或 'enemy'
+ */
+function playDodgeAnimation(target) {
+  const sprite = document.querySelector(`.${target}-sprite`);
+  if (!sprite) return;
+  
+  sprite.classList.add('dodge-animation');
+  setTimeout(() => sprite.classList.remove('dodge-animation'), 400);
+}
+
+// ============================================================
+// 钓鱼动画系统
+// ============================================================
+
+let fishingAnimState = {
+  isAnimating: false,
+  floatElement: null,
+  lineElement: null
+};
+
+/**
+ * 初始化钓鱼场景
+ */
+function initFishingScene() {
+  const scene = document.querySelector('.fishing-scene');
+  if (!scene) return;
+  
+  // 创建水面波纹
+  const waves = document.createElement('div');
+  waves.className = 'water-waves';
+  scene.appendChild(waves);
+  
+  // 创建鱼竿
+  const rod = document.createElement('div');
+  rod.className = 'fishing-rod';
+  scene.appendChild(rod);
+  
+  // 创建鱼线
+  const line = document.createElement('div');
+  line.className = 'fishing-line';
+  rod.appendChild(line);
+  
+  // 创建鱼钩
+  const hook = document.createElement('div');
+  hook.className = 'fishing-hook';
+  line.appendChild(hook);
+  
+  // 创建浮漂
+  const floatEl = document.createElement('div');
+  floatEl.className = 'fishing-float';
+  scene.appendChild(floatEl);
+  
+  fishingAnimState.floatElement = floatEl;
+  fishingAnimState.lineElement = line;
+}
+
+/**
+ * 播放鱼上钩动画
+ */
+function playFishBiteAnimation() {
+  if (!fishingAnimState.floatElement) return;
+  
+  fishingAnimState.floatElement.classList.add('biting');
+  
+  // 3次抖动后移除
+  setTimeout(() => {
+    if (fishingAnimState.floatElement) {
+      fishingAnimState.floatElement.classList.remove('biting');
+    }
+  }, 1500);
+}
+
+/**
+ * 播放钓到鱼动画
+ * @param {string} fishType - 鱼的类型
+ */
+function playCatchFishAnimation(fishType) {
+  const scene = document.querySelector('.fishing-scene');
+  if (!scene) return;
+  
+  // 创建鱼精灵
+  const fish = document.createElement('div');
+  fish.className = 'fish-sprite fish-caught';
+  
+  // 根据鱼类型设置颜色
+  const colors = {
+    'common_fish': '#4A90D9',
+    'rare_fish': '#9370DB',
+    'legendary_fish': '#FFD700',
+    'void_fish': '#7C3AED',
+    'moonfish': '#FFD700',
+    'shadow_eel': '#4A4A4A',
+    'starfish': '#FF69B4'
+  };
+  
+  fish.style.background = `linear-gradient(to right, ${colors[fishType] || '#4A90D9'}, ${colors[fishType] || '#6BB5FF'})`;
+  fish.style.left = '60%';
+  fish.style.bottom = '35%';
+  
+  scene.appendChild(fish);
+  
+  // 动画结束后移除
+  setTimeout(() => fish.remove(), 1000);
+}
+
+/**
+ * 重置钓鱼场景
+ */
+function resetFishingScene() {
+  const scene = document.querySelector('.fishing-scene');
+  if (!scene) return;
+  
+  // 移除所有动态元素
+  const dynamicElements = scene.querySelectorAll('.fish-sprite, .water-waves');
+  dynamicElements.forEach(el => el.remove());
+  
+  // 重置浮漂
+  if (fishingAnimState.floatElement) {
+    fishingAnimState.floatElement.classList.remove('biting');
+  }
+}
+
+// ============================================================
+// 修改现有的战斗和钓鱼函数，集成动画
+// ============================================================
+
+// 保存原始函数引用
+const originalPlayerAttack = typeof playerAttack === 'function' ? playerAttack : null;
+const originalEnemyTurn = typeof enemyTurn === 'function' ? enemyTurn : null;
+const originalStartFishing = typeof startFishing === 'function' ? startFishing : null;
+
+// 如果原始函数存在，包装它们
+if (originalPlayerAttack) {
+  window.playerAttack = function(targetIndex) {
+    // 播放玩家攻击动画
+    playAttackAnimation('player');
+    
+    // 调用原始函数
+    const result = originalPlayerAttack.call(this, targetIndex);
+    
+    // 如果有伤害，显示伤害数字
+    if (result && result.damage !== undefined) {
+      setTimeout(() => {
+        showDamageNumber(result.damage, 'enemy', result.isCritical);
+        playHitAnimation('enemy');
+        
+        // 根据伤害类型播放特效
+        if (result.damageType) {
+          playSkillEffect(result.damageType, 'enemy');
+        }
+      }, 300);
+    }
+    
+    return result;
+  };
+}
+
+if (originalEnemyTurn) {
+  window.enemyTurn = function() {
+    // 播放敌人攻击动画
+    playAttackAnimation('enemy');
+    
+    // 调用原始函数
+    const result = originalEnemyTurn.call(this);
+    
+    // 如果有伤害，显示伤害数字
+    if (result && result.damage !== undefined) {
+      setTimeout(() => {
+        showDamageNumber(result.damage, 'player', false);
+        playHitAnimation('player');
+      }, 300);
+    }
+    
+    return result;
+  };
+}
+
+// 钓鱼动画集成
+if (originalStartFishing) {
+  window.startFishing = function() {
+    // 初始化钓鱼场景
+    initFishingScene();
+    
+    // 调用原始函数
+    return originalStartFishing.call(this);
+  };
+}
+
+// 在钓到鱼时播放动画
+// 这需要在determineFishCatch函数中调用
+const originalDetermineFishCatch = typeof determineFishCatch === 'function' ? determineFishCatch : null;
+if (originalDetermineFishCatch) {
+  window.determineFishCatch = function() {
+    const result = originalDetermineFishCatch.call(this);
+    
+    // 播放鱼上钩动画
+    playFishBiteAnimation();
+    
+    // 延迟播放钓到鱼动画
+    setTimeout(() => {
+      playCatchFishAnimation(result.id);
+    }, 500);
+    
+    return result;
+  };
+}
+
+console.log('🎮 动画系统已加载');
 
 </script>
 </body>
