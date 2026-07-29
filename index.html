@@ -411,8 +411,7 @@ button:active { transform:scale(0.96); }
 // ============================================================
 const INITIAL_STATS = { hp:100, maxHp:100, hunger:100, water:100, mental:100, energy:200, maxEnergy:200, spirit:10 };
 const INITIAL_ITEMS = {
-  wood_axe:1, wood_pickaxe:1, wood_shovel:1, water_skin:1,
-  seed_pack:1, torch:8, bandage:5, expand_voucher:1
+  wood_rod:1
 };
 
 let G = null; // game state
@@ -1884,6 +1883,25 @@ function removeInventoryItem(id, count=1) {
 
 function hasItem(id, count=1) { return (G.inventory[id]||0) >= count; }
 
+function hasTool(toolType) {
+  // Check equipped tool
+  if (G.player) {
+    const tool = G.player.equipment.getTool();
+    if (tool && !tool.isBroken && tool.itemData.tool_type === toolType) return true;
+  } else if (G.equippedTool) {
+    const def = getItemDef(G.equippedTool);
+    if (def && def.tool_type === toolType) return true;
+  }
+  // Check inventory for tools
+  for (const [id, count] of Object.entries(G.inventory)) {
+    if (count > 0) {
+      const def = getItemDef(id);
+      if (def && def.tool_type === toolType && def.type === 'tool') return true;
+    }
+  }
+  return false;
+}
+
 function countItems() {
   let total = 0;
   for (const k in G.inventory) total += G.inventory[k];
@@ -2994,25 +3012,36 @@ function gatherResource(type) {
   let items = [];
   switch(type) {
     case 'wood':
+      // 需要斧头
+      if (!hasTool('axe')) {
+        addLog('❌ 没有斧头无法砍树！请先制作一把斧头。', 'warning');
+        return;
+      }
       items = [{id:'wood', min:2, max:5+toolBonus}];
       if (Math.random() < 0.2) items.push({id:'fine_wood', min:1, max:1});
       break;
     case 'stone':
+      // 需要镐
+      if (!hasTool('pickaxe')) {
+        addLog('❌ 没有镐无法采矿！请先制作一把镐。', 'warning');
+        return;
+      }
       items = [{id:'stone', min:2, max:4+toolBonus}];
       if (Math.random() < 0.15) items.push({id:'iron_ore', min:1, max:2});
       if (Math.random() < 0.08) items.push({id:'copper_ore', min:1, max:1});
       break;
     case 'herb':
+      // 草药可以徒手采集
       items = [{id:'herb', min:1, max:3}];
       if (hasProfession('healer')) items[0].max += 2;
       if (Math.random() < 0.1) items.push({id:'herb_seed', min:1, max:1});
       break;
     case 'fiber':
+      // 纤维可以徒手采集
       items = [{id:'fiber', min:2, max:4}];
       break;
     case 'explore':
       exploreIsland();
-      // advanceTime(1); - 时间已改为自然流逝
       return;
   }
 
@@ -3859,14 +3888,13 @@ function confirmTalent() {
   applyTalentEffects();
   G.gameStarted = true;
 
-  // Give starting items
+  // Give starting items (only fishing rod)
   for (const [id, count] of Object.entries(INITIAL_ITEMS)) {
     addInventoryItem(id, count);
   }
 
-  // Give some seeds from seed pack
-  addInventoryItem('wheat_seed', 5);
-  addInventoryItem('herb_seed', 3);
+  // Auto-equip fishing rod
+  useItem('wood_rod');
 
   initGarden();
 
@@ -3874,7 +3902,8 @@ function confirmTalent() {
   renderAll();
   addLog('🏝️ 欢迎来到空岛求生！你醒来时发现自己身处一座浮空岛上。', 'system');
   addLog('📋 前7天是安全期，利用这段时间收集资源、建造庇护所。', 'system');
-  addLog('💡 提示：白天采集资源，制作工具和武器，为夜晚的危险做准备。', 'system');
+  addLog('💡 提示：探索岛屿收集资源，制作工具和武器。', 'system');
+  addLog('🎣 钓鱼竿已装备，可以开始钓鱼获取食物。', 'system');
   saveGame();
 }
 
@@ -4166,7 +4195,10 @@ function renderExplore() {
   const panel = document.getElementById('tab-explore');
   // Yield preview based on current tool and weather
   const getToolBonus = () => {
-    if (G.equippedTool && G.toolDurability[G.equippedTool] > 0) {
+    if (G.player) {
+      const tool = G.player.equipment.getTool();
+      if (tool && !tool.isBroken) return tool.itemData.power || 0;
+    } else if (G.equippedTool && G.toolDurability[G.equippedTool] > 0) {
       const def = getItemDef(G.equippedTool);
       return def ? (def.power || 0) : 0;
     }
@@ -4176,15 +4208,22 @@ function renderExplore() {
   const toolBonus = getToolBonus();
   const weatherNote = G.weather === 'rainy' ? '🌧️ 雨天+20%' : G.weather === 'stormy' ? '⛈️ 暴风雨-50%' : G.weather === 'foggy' ? '🌫️ 雾天' : '';
 
+  // Check tool availability
+  const hasAxe = hasTool('axe');
+  const hasPickaxe = hasTool('pickaxe');
+  const hasContainer = hasItem('water_skin') || hasItem('water_bucket');
+
   panel.innerHTML = `
     <div class="panel">
       <h3>🔍 资源采集 ${weatherNote ? '<span style="font-size:0.8em;color:var(--text2)">'+weatherNote+'</span>' : ''}</h3>
       <div class="action-grid">
-        <button class="action-btn" onclick="gatherResource('wood')">
-          🪵 伐木<br><span class="yield-preview">预计: ${Math.max(1,Math.floor((3+toolBonus)*weatherMult))}-${Math.max(1,Math.floor((5+toolBonus)*weatherMult))}</span>
+        <button class="action-btn" onclick="gatherResource('wood')" ${!hasAxe?'disabled':''}>
+          🪵 伐木${!hasAxe?'<br><span style="color:var(--red);font-size:0.8em">需要斧头</span>':''}
+          ${hasAxe?`<br><span class="yield-preview">预计: ${Math.max(1,Math.floor((3+toolBonus)*weatherMult))}-${Math.max(1,Math.floor((5+toolBonus)*weatherMult))}</span>`:''}
         </button>
-        <button class="action-btn" onclick="gatherResource('stone')">
-          🪨 采石<br><span class="yield-preview">预计: ${Math.max(1,Math.floor(2*weatherMult))}-${Math.max(1,Math.floor((4+toolBonus)*weatherMult))}</span>
+        <button class="action-btn" onclick="gatherResource('stone')" ${!hasPickaxe?'disabled':''}>
+          🪨 采石${!hasPickaxe?'<br><span style="color:var(--red);font-size:0.8em">需要镐</span>':''}
+          ${hasPickaxe?`<br><span class="yield-preview">预计: ${Math.max(1,Math.floor(2*weatherMult))}-${Math.max(1,Math.floor((4+toolBonus)*weatherMult))}</span>`:''}
         </button>
         <button class="action-btn" onclick="gatherResource('herb')">
           🌿 采药<br><span class="yield-preview">预计: ${Math.max(1,Math.floor(1*weatherMult))}-${Math.max(1,Math.floor(3*weatherMult))}</span>
@@ -4192,8 +4231,8 @@ function renderExplore() {
         <button class="action-btn" onclick="gatherResource('fiber')">
           🌿 采集纤维<br><span class="yield-preview">预计: ${Math.max(1,Math.floor(2*weatherMult))}-${Math.max(1,Math.floor(4*weatherMult))}</span>
         </button>
-        <button class="action-btn" onclick="gatherResource('water')">
-          💧 取水<br><span class="yield-preview">饮水+${hasItem('water_bucket')?35:20}</span>
+        <button class="action-btn" onclick="gatherResource('water')" ${!hasContainer?'disabled':''}>
+          💧 取水${!hasContainer?'<br><span style="color:var(--red);font-size:0.8em">需要水袋</span>':''}
         </button>
         <button class="action-btn primary" onclick="gatherResource('explore')">🗺️ 探索岛屿</button>
       </div>
