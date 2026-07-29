@@ -394,6 +394,7 @@ button:active { transform:scale(0.96); }
     <div id="tab-info" class="tab-panel"></div>
     <div id="tab-ach" class="tab-panel"></div>
     <div id="tab-help" class="tab-panel"></div>
+    <div id="tab-storage" class="tab-panel"></div>
   </div>
   <div class="log-panel" id="log-panel"></div>
 </div>
@@ -433,6 +434,7 @@ function createNewState() {
     stats: stats, // shared reference with player.stats
     inventory: {},
     buildings: {},
+    storage: {}, // 储物箱物品 {itemId: count}
     blueprints: [],
     professions: [],
     skills: [],
@@ -3808,10 +3810,11 @@ function startGameClock() {
   if (clockTimer) clearInterval(clockTimer);
   clockTimer = setInterval(() => {
     if (!G || !G.gameStarted) return;
-    G.second = (G.second || 0) + 1;
-    if (G.second >= 60) { G.second = 0; G.minute = (G.minute || 0) + 1; }
-    if (G.minute >= 60) { G.minute = 0; G.hour = (G.hour || 0) + 1; }
-    if (G.hour >= 24) { G.hour = 0; G.day++; checkDailyEvents(); }
+    // 现实1天 = 游戏1周: 每秒+7秒
+    G.second = (G.second || 0) + 7;
+    while (G.second >= 60) { G.second -= 60; G.minute = (G.minute || 0) + 1; }
+    while (G.minute >= 60) { G.minute -= 60; G.hour = (G.hour || 0) + 1; }
+    while (G.hour >= 24) { G.hour -= 24; G.day++; checkDailyEvents(); }
     // 每秒恢复精力
     regenEnergy();
     // Update clock and energy display
@@ -3889,6 +3892,7 @@ const TAB_DEFS = [
   {id:'build', name:'🏗️ 建造', render: renderBuildings},
   {id:'craft', name:'🔨 制作', render: renderCrafting},
   {id:'inventory', name:'🎒 背包', render: renderInventory},
+  {id:'storage', name:'📦 储物箱', render: renderStorage},
   {id:'fishing', name:'🎣 钓鱼', render: renderFishing},
   {id:'info', name:'📊 信息', render: renderInfo},
   {id:'ach', name:'🏆 成就', render: renderAchievements},
@@ -3921,8 +3925,20 @@ function regenEnergy() {
   // 精力上限公式：160 + 精神×3 + 等级×2
   G.stats.maxEnergy = 160 + (G.stats.spirit||10) * 3 + (G.playerLevel||1) * 2;
   // 精力恢复公式：15 + 精神×0.5 + 上限×0.02（每小时）
-  // 转换为每秒恢复：恢复量 / 3600
-  const regenPerHour = 15 + (G.stats.spirit||10) * 0.5 + G.stats.maxEnergy * 0.02;
+  let regenPerHour = 15 + (G.stats.spirit||10) * 0.5 + G.stats.maxEnergy * 0.02;
+  // 饱食度/饮水度影响精力恢复
+  const hunger = G.stats.hunger || 0;
+  const water = G.stats.water || 0;
+  if (hunger <= 0 || water <= 0) {
+    regenPerHour = 0; // 饥饿或干渴时不恢复精力
+  } else if (hunger < 30 || water < 30) {
+    regenPerHour *= 0.3; // 低于30时恢复大幅减少
+  } else if (hunger < 50 || water < 50) {
+    regenPerHour *= 0.6; // 低于50时恢复减少
+  }
+  // 天赋加成
+  regenPerHour *= getTalentMult('energyRegenMult', 1);
+  // 转换为每秒恢复
   const regenPerSecond = regenPerHour / 3600;
   G.stats.energy = Math.min(G.stats.maxEnergy, G.stats.energy + regenPerSecond);
 }
@@ -4542,6 +4558,132 @@ function unequipItem(slot) {
     }
     if (item) { addInventoryItem(item); addLog(`卸下了${getItemName(item)}`, 'system'); }
   }
+  renderInventory();
+}
+
+// ============================================================
+// STORAGE SYSTEM
+// ============================================================
+function getStorageSlots() {
+  let slots = 0;
+  if (G.buildings.basic_storage) slots += 9;
+  if (G.buildings.storage) slots += 20;
+  return slots;
+}
+
+function storeItem(itemId, count) {
+  if (!G.storage) G.storage = {};
+  const has = G.inventory[itemId] || 0;
+  if (has < count) return false;
+  G.inventory[itemId] -= count;
+  if (G.inventory[itemId] <= 0) delete G.inventory[itemId];
+  G.storage[itemId] = (G.storage[itemId] || 0) + count;
+  return true;
+}
+
+function retrieveItem(itemId, count) {
+  if (!G.storage) G.storage = {};
+  const has = G.storage[itemId] || 0;
+  if (has < count) return false;
+  G.storage[itemId] -= count;
+  if (G.storage[itemId] <= 0) delete G.storage[itemId];
+  addInventoryItem(itemId, count);
+  return true;
+}
+
+function renderStorage() {
+  const panel = document.getElementById('tab-storage');
+  const hasStorage = G.buildings.basic_storage || G.buildings.storage;
+  if (!hasStorage) {
+    panel.innerHTML = '<div class="panel"><h3>📦 储物箱</h3><p style="color:var(--text2)">需要先建造"基础储物箱"建筑</p></div>';
+    return;
+  }
+
+  const slots = getStorageSlots();
+  const storageItems = Object.entries(G.storage || {}).filter(([k,v]) => v > 0);
+  const usedSlots = storageItems.length;
+
+  let html = `
+    <div class="panel">
+      <h3>📦 储物箱 (${usedSlots}/${slots}格)</h3>
+      <p style="font-size:0.85em;color:var(--text2);margin-bottom:10px">点击物品可存入/取出</p>
+      <div class="item-grid">
+  `;
+
+  // Storage items
+  for (const [id, count] of storageItems) {
+    const def = getItemDef(id);
+    const grade = def?.grade || 'F';
+    html += `
+      <div class="item-card grade-${grade}" onclick="showStorageModal('${id}','retrieve')">
+        <div class="item-icon">${getItemIcon(id)}</div>
+        <div class="item-name">${def?.name||id}</div>
+        <div class="item-count">x${count}</div>
+      </div>
+    `;
+  }
+
+  // Empty slots
+  for (let i = usedSlots; i < slots; i++) {
+    html += `<div class="item-card" style="opacity:0.3;border-style:dashed"><div class="item-icon">📦</div><div class="item-name">空</div></div>`;
+  }
+
+  html += '</div></div>';
+
+  // Store items section
+  const invItems = Object.entries(G.inventory).filter(([k,v]) => v > 0);
+  html += `
+    <div class="panel">
+      <h3>📥 存入物品</h3>
+      <div class="item-grid">
+  `;
+  for (const [id, count] of invItems) {
+    const def = getItemDef(id);
+    const grade = def?.grade || 'F';
+    html += `
+      <div class="item-card grade-${grade}" onclick="showStorageModal('${id}','store')">
+        <div class="item-icon">${getItemIcon(id)}</div>
+        <div class="item-name">${def?.name||id}</div>
+        <div class="item-count">x${count}</div>
+      </div>
+    `;
+  }
+  html += '</div></div>';
+
+  panel.innerHTML = html;
+}
+
+function showStorageModal(itemId, action) {
+  const def = getItemDef(itemId);
+  const isStore = action === 'store';
+  const maxCount = isStore ? (G.inventory[itemId]||0) : (G.storage[itemId]||0);
+  if (maxCount <= 0) return;
+
+  const overlay = document.getElementById('modal-overlay');
+  const box = document.getElementById('modal-box');
+  box.innerHTML = `
+    <h3>${isStore ? '📥 存入' : '📤 取出'} ${getItemIcon(itemId)} ${def?.name||itemId}</h3>
+    <p style="color:var(--text2);margin:8px 0">可用数量: ${maxCount}</p>
+    <div style="display:flex;gap:8px;margin:12px 0;flex-wrap:wrap">
+      ${[1,5,10,maxCount].filter(n=>n>0&&n<=maxCount).map(n=>
+        `<button class="action-btn" onclick="doStorage('${itemId}','${action}',${n})">${n===maxCount?'全部':n}</button>`
+      ).join('')}
+    </div>
+    <div class="modal-actions"><button onclick="hideModal()" style="background:var(--bg3);color:var(--text)">取消</button></div>
+  `;
+  overlay.classList.add('active');
+}
+
+function doStorage(itemId, action, count) {
+  if (action === 'store') {
+    storeItem(itemId, count);
+    addLog(`📥 存入${getItemName(itemId)} x${count}`, 'system');
+  } else {
+    retrieveItem(itemId, count);
+    addLog(`📤 取出${getItemName(itemId)} x${count}`, 'system');
+  }
+  hideModal();
+  renderStorage();
   renderInventory();
 }
 
