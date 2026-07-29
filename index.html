@@ -5,6 +5,47 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>空岛求生 - Sky Island Survival</title>
 <script src="game_data.js"></script>
+<script type="module">
+import { G as GModule, setG } from './js/state.js';
+import { START_TALENTS, TALENT_GRADES, TALENT_GRADE_WEIGHTS, getRandomTalents, applyTalentEffects as applyTalentEffectsModule, getTalentEffect as getTalentEffectModule, getTalentMult as getTalentMultModule } from './js/talents.js';
+import { EquipSlot, EquipItem, Equipment, Player, unequipBrokenItems as unequipBrokenItemsModule, migrateToV2 as migrateToV2Module } from './js/equipment.js';
+import { calcPlayerAtk as calcPlayerAtkModule, getPlayerCritChance as getPlayerCritChanceModule, getPlayerCritDmg as getPlayerCritDmgModule, getPlayerLifesteal as getPlayerLifestealModule, getPlayerDodgeBonus as getPlayerDodgeBonusModule, calcPlayerDef as calcPlayerDefModule, playerAttack as playerAttackModule, enemyTurn as enemyTurnModule, combatVictory as combatVictoryModule, getCombatState, setCombatState, injectCombatDeps } from './js/combat.js';
+import { hasTool as hasToolModule, gatherResource as gatherResourceModule, exploreIsland as exploreIslandModule, injectGatheringDeps } from './js/gathering.js';
+import { startFishing as startFishingModule, determineFishCatch as determineFishCatchModule, injectFishingDeps } from './js/fishing.js';
+
+// 暴露到全局
+window.START_TALENTS = START_TALENTS;
+window.TALENT_GRADES = TALENT_GRADES;
+window.TALENT_GRADE_WEIGHTS = TALENT_GRADE_WEIGHTS;
+window.getRandomTalents = getRandomTalents;
+window.EquipSlot = EquipSlot;
+window.EquipItem = EquipItem;
+window.Equipment = Equipment;
+window.Player = Player;
+window._modules = {
+  applyTalentEffects: applyTalentEffectsModule,
+  getTalentEffect: getTalentEffectModule,
+  getTalentMult: getTalentMultModule,
+  unequipBrokenItems: unequipBrokenItemsModule,
+  migrateToV2: migrateToV2Module,
+  calcPlayerAtk: calcPlayerAtkModule,
+  getPlayerCritChance: getPlayerCritChanceModule,
+  getPlayerCritDmg: getPlayerCritDmgModule,
+  getPlayerLifesteal: getPlayerLifestealModule,
+  getPlayerDodgeBonus: getPlayerDodgeBonusModule,
+  calcPlayerDef: calcPlayerDefModule,
+  playerAttack: playerAttackModule,
+  enemyTurn: enemyTurnModule,
+  combatVictory: combatVictoryModule,
+  hasTool: hasToolModule,
+  gatherResource: gatherResourceModule,
+  exploreIsland: exploreIslandModule,
+  startFishing: startFishingModule,
+  determineFishCatch: determineFishCatchModule,
+  setG,
+};
+console.log('✅ 模块加载完成');
+</script>
 <style>
 :root {
   --bg: #1a1a2e; --bg2: #16213e; --bg3: #0f3460; --panel: #1a1a3e;
