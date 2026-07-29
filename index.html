@@ -540,11 +540,28 @@ class EquipItem {
     this.grade = grade || (itemData && itemData.grade) || 'F';
     this.durability = durability != null ? durability : (itemData && itemData.durability) || -1;
     this.maxDurability = (itemData && itemData.durability) || -1;
+    // 应用词条耐久加成
+    this.applyAffixDurBonus();
   }
   get name() { return this.itemData.name || this.itemId; }
   get isBroken() { return this.durability === 0; }
   get atk() { return this.itemData.atk || 0; }
   get def() { return this.itemData.def || 0; }
+  
+  // 应用词条耐久加成
+  applyAffixDurBonus() {
+    if (typeof G !== 'undefined' && G.itemAffixes && G.itemAffixes[this.itemId]) {
+      const affixes = G.itemAffixes[this.itemId];
+      for (const a of affixes) {
+        if (a.stat === 'durBonus' && this.maxDurability > 0) {
+          const bonus = Math.floor(this.maxDurability * a.value / 100);
+          this.maxDurability += bonus;
+          this.durability += bonus;
+        }
+      }
+    }
+  }
+  
   consumeDurability(amount) {
     if (this.durability < 0) return false;
     this.durability = Math.max(0, this.durability - (amount || 1));
@@ -1721,7 +1738,51 @@ function formatAffixes(itemId) {
 // Store affixes on newly created equipment
 function storeAffixes(itemId, affixes) {
   if (!G.itemAffixes) G.itemAffixes = {};
-  if (affixes.length > 0) G.itemAffixes[itemId] = affixes;
+  if (affixes.length > 0) {
+    G.itemAffixes[itemId] = affixes;
+    // 应用耐久加成词条
+    applyDurBonusToItem(itemId);
+  }
+}
+
+// 应用耐久加成词条到物品
+function applyDurBonusToItem(itemId) {
+  const affixes = G.itemAffixes ? G.itemAffixes[itemId] : null;
+  if (!affixes) return;
+  let durBonus = 0;
+  for (const a of affixes) {
+    if (a.stat === 'durBonus') durBonus += a.value;
+  }
+  if (durBonus <= 0) return;
+  // 如果物品在背包中，增加其耐久上限
+  if (G.toolDurability && G.toolDurability[itemId] !== undefined) {
+    const def = getItemDef(itemId);
+    if (def && def.durability) {
+      const baseDur = def.durability;
+      const newMaxDur = Math.floor(baseDur * (1 + durBonus / 100));
+      // 如果当前耐久等于基础耐久，说明是新物品，设置为新上限
+      if (G.toolDurability[itemId] >= baseDur) {
+        G.toolDurability[itemId] = newMaxDur;
+      }
+    }
+  }
+}
+
+// 获取物品的实际最大耐久（含词条加成）
+function getItemMaxDurability(itemId) {
+  const def = getItemDef(itemId);
+  if (!def || !def.durability) return 0;
+  let maxDur = def.durability;
+  // 词条耐久加成
+  const affixes = G.itemAffixes ? G.itemAffixes[itemId] : null;
+  if (affixes) {
+    for (const a of affixes) {
+      if (a.stat === 'durBonus') {
+        maxDur = Math.floor(maxDur * (1 + a.value / 100));
+      }
+    }
+  }
+  return maxDur;
 }
 
 // Reroll affixes (for smith skill)
@@ -1731,6 +1792,20 @@ function rerollAffixes(itemId) {
   const grade = def.grade || 'F';
   const newAffixes = generateAffixes(itemId, grade, 0.2);
   storeAffixes(itemId, newAffixes);
+  // 重新应用耐久加成到已装备的物品
+  if (G.player) {
+    const eq = G.player.equipment;
+    for (const slot of Object.values(EquipSlot)) {
+      const item = eq.slots[slot];
+      if (item && item.itemId === itemId) {
+        // 重置耐久为基础值
+        item.maxDurability = def.durability || -1;
+        item.durability = def.durability || -1;
+        // 重新应用词条加成
+        item.applyAffixDurBonus();
+      }
+    }
+  }
   addLog(`🔨 重新锻造了${def.name}的词条！`, 'good');
 }
 
@@ -4213,7 +4288,7 @@ function renderStatusBar() {
     ].filter(e => e.id);
     for (const eq of equippedItems) {
       const def = getItemDef(eq.id);
-      const maxDur = def?.durability || 0;
+      const maxDur = getItemMaxDurability(eq.id) || def?.durability || 0;
       const curDur = G.toolDurability[eq.id] ?? maxDur;
       const durPct = maxDur > 0 ? Math.round(curDur/maxDur*100) : 100;
       const durColor = durPct > 60 ? 'var(--green)' : durPct > 30 ? 'var(--yellow)' : 'var(--red)';
@@ -4335,7 +4410,7 @@ function renderMain() {
   const durDisplay = (id) => {
     if (!id) return '无';
     const def = getItemDef(id);
-    const maxDur = def?.durability || 0;
+    const maxDur = getItemMaxDurability(id) || def?.durability || 0;
     const curDur = G.toolDurability[id] ?? maxDur;
     if (maxDur <= 0) return getItemName(id);
     const pct = Math.round(curDur/maxDur*100);
