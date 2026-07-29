@@ -169,7 +169,7 @@ button:active { transform:scale(0.96); }
 .item-card {
   background:var(--bg); border:1px solid var(--border); border-radius:6px;
   padding:8px; text-align:center; font-size:0.8em; cursor:pointer; position:relative;
-  transition:all 0.15s;
+  transition:all 0.15s; overflow:hidden;
 }
 .item-card:hover { border-color:var(--accent2); }
 .item-card .item-icon { font-size:1.6em; margin-bottom:4px; }
@@ -531,7 +531,25 @@ function createNewState() {
 // === Equipment & Player Classes (v2: matches Python architecture) ===
 // Single source of truth for equipment. No more dual-sync.
 
-const EquipSlot = { WEAPON:'weapon', HEAD:'head', BODY:'body', ACCESSORY:'accessory', ROD:'rod', BAIT:'bait', TOOL:'tool' };
+const EquipSlot = {
+  LEFT_HAND:'left_hand',   // 主手: 武器、工具、钓竿
+  RIGHT_HAND:'right_hand', // 副手: 武器、工具、盾牌
+  HEAD:'head',             // 头部: 头盔、帽子
+  BODY:'body',             // 身体: 护甲、衣服
+  BACK:'back',             // 背部: 背包、披风
+  ACCESSORY:'accessory',   // 饰品: 戒指、项链
+  BAIT:'bait'              // 钓饵: 专用槽位
+};
+
+const SLOT_NAMES = {
+  left_hand:'主手', right_hand:'副手', head:'头部',
+  body:'身体', back:'背部', accessory:'饰品', bait:'钓饵'
+};
+
+const SLOT_ICONS = {
+  left_hand:'🤚', right_hand:'✋', head:'👑',
+  body:'👕', back:'🎒', accessory:'💍', bait:'🪱'
+};
 
 class EquipItem {
   constructor(itemId, itemData, grade, durability) {
@@ -580,18 +598,37 @@ class EquipItem {
 class Equipment {
   constructor() {
     this.slots = {
-      [EquipSlot.WEAPON]: null, [EquipSlot.HEAD]: null,
-      [EquipSlot.BODY]: null, [EquipSlot.ACCESSORY]: null,
-      [EquipSlot.ROD]: null, [EquipSlot.BAIT]: null, [EquipSlot.TOOL]: null,
+      [EquipSlot.LEFT_HAND]: null,   // 主手: 武器、工具、钓竿
+      [EquipSlot.RIGHT_HAND]: null,  // 副手: 武器、工具、盾牌
+      [EquipSlot.HEAD]: null,        // 头部: 头盔
+      [EquipSlot.BODY]: null,        // 身体: 护甲
+      [EquipSlot.BACK]: null,        // 背部: 背包
+      [EquipSlot.ACCESSORY]: null,   // 饰品
+      [EquipSlot.BAIT]: null,        // 钓饵
     };
   }
-  getWeapon() { return this.slots[EquipSlot.WEAPON]; }
+  getMainHand() { return this.slots[EquipSlot.LEFT_HAND]; }
+  getOffHand() { return this.slots[EquipSlot.RIGHT_HAND]; }
+  getWeapon() { return this.slots[EquipSlot.LEFT_HAND]; }
   getArmor() { return this.slots[EquipSlot.BODY]; }
   getHelmet() { return this.slots[EquipSlot.HEAD]; }
   getAccessory() { return this.slots[EquipSlot.ACCESSORY]; }
-  getRod() { return this.slots[EquipSlot.ROD]; }
+  getBackpack() { return this.slots[EquipSlot.BACK]; }
+  getRod() {
+    const left = this.slots[EquipSlot.LEFT_HAND];
+    if (left && left.itemData.tool_type === 'fishing') return left;
+    const right = this.slots[EquipSlot.RIGHT_HAND];
+    if (right && right.itemData.tool_type === 'fishing') return right;
+    return null;
+  }
   getBait() { return this.slots[EquipSlot.BAIT]; }
-  getTool() { return this.slots[EquipSlot.TOOL]; }
+  getTool() {
+    const left = this.slots[EquipSlot.LEFT_HAND];
+    if (left && left.itemData.tool_type && left.itemData.tool_type !== 'fishing') return left;
+    const right = this.slots[EquipSlot.RIGHT_HAND];
+    if (right && right.itemData.tool_type && right.itemData.tool_type !== 'fishing') return right;
+    return null;
+  }
 
   equip(item, slot) {
     const old = this.slots[slot];
@@ -607,16 +644,20 @@ class Equipment {
   getTotalDef() {
     let total = 0;
     for (const item of Object.values(this.slots)) {
-      if (item && !item.isBroken) total += item.def;
+      if (item && !item.isBroken) total += (item.itemData.def || 0);
     }
     return total;
   }
   getTotalAtk() {
-    const weapon = this.getWeapon();
-    return (weapon && !weapon.isBroken) ? weapon.atk : 0;
+    let total = 0;
+    const main = this.getMainHand();
+    if (main && !main.isBroken) total += (main.itemData.atk || 0);
+    const off = this.getOffHand();
+    if (off && !off.isBroken) total += Math.floor((off.itemData.atk || 0) * 0.5);
+    return total;
   }
   consumeWeaponDurability(amount) {
-    const weapon = this.getWeapon();
+    const weapon = this.getMainHand();
     if (!weapon) return false;
     return weapon.consumeDurability(amount || 1);
   }
@@ -642,16 +683,16 @@ class Equipment {
     }
     return eq;
   }
-  // Legacy compat: sync to flat G fields
   syncToLegacy() {
-    G.equippedWeapon = this.getWeapon() ? this.getWeapon().itemId : null;
+    if (!G) return;
+    const main = this.getMainHand();
+    G.equippedWeapon = main && main.itemData.type === 'weapon' ? main.itemId : null;
     G.equippedArmor = this.getArmor() ? this.getArmor().itemId : null;
     G.equippedHead = this.getHelmet() ? this.getHelmet().itemId : null;
     G.equippedRod = this.getRod() ? this.getRod().itemId : null;
     G.equippedBait = this.getBait() ? this.getBait().itemId : null;
     G.equippedTool = this.getTool() ? this.getTool().itemId : null;
   }
-  // Legacy compat: sync from flat G fields (for migration)
   syncFromLegacy() {
     const tryEquip = (itemId, slot) => {
       if (itemId) {
@@ -662,12 +703,12 @@ class Equipment {
         }
       }
     };
-    tryEquip(G.equippedWeapon, EquipSlot.WEAPON);
+    tryEquip(G.equippedWeapon, EquipSlot.LEFT_HAND);
     tryEquip(G.equippedArmor, EquipSlot.BODY);
     tryEquip(G.equippedHead, EquipSlot.HEAD);
-    tryEquip(G.equippedRod, EquipSlot.ROD);
+    tryEquip(G.equippedRod, EquipSlot.LEFT_HAND);
     tryEquip(G.equippedBait, EquipSlot.BAIT);
-    tryEquip(G.equippedTool, EquipSlot.TOOL);
+    tryEquip(G.equippedTool, EquipSlot.LEFT_HAND);
   }
 }
 
@@ -2004,17 +2045,11 @@ function hasItem(id, count=1) { return (G.inventory[id]||0) >= count; }
 function unequipBrokenItems() {
   if (!G.player) return;
   const eq = G.player.equipment;
-  const slots = [
-    {slot: EquipSlot.WEAPON, name: 'weapon'},
-    {slot: EquipSlot.BODY, name: 'armor'},
-    {slot: EquipSlot.HEAD, name: 'head'},
-    {slot: EquipSlot.TOOL, name: 'tool'},
-    {slot: EquipSlot.ROD, name: 'rod'},
-  ];
-  for (const s of slots) {
-    const item = eq.slots[s.slot];
+  const slots = [EquipSlot.LEFT_HAND, EquipSlot.RIGHT_HAND, EquipSlot.HEAD, EquipSlot.BODY, EquipSlot.BACK];
+  for (const slot of slots) {
+    const item = eq.slots[slot];
     if (item && item.isBroken) {
-      eq.unequip(s.slot);
+      eq.unequip(slot);
       eq.syncToLegacy();
       addLog(`💔 ${item.name}已损坏，自动卸下`, 'warning');
     }
@@ -3846,11 +3881,12 @@ function useItem(id) {
     renderAll();
     return;
   }
-  // v2: Equipment via Equipment class (matches Python engine._handle_equip)
+  // v2: Equipment via Equipment class (body-part based)
   if (def.type === 'weapon') {
     if (G.player) {
       const item = new EquipItem(id, def, def.grade, G.toolDurability[id] != null ? G.toolDurability[id] : def.durability);
-      const old = G.player.equipment.equip(item, EquipSlot.WEAPON);
+      // 武器默认装备到主手
+      const old = G.player.equipment.equip(item, EquipSlot.LEFT_HAND);
       removeInventoryItem(id);
       if (old) { addInventoryItem(old.itemId); G.toolDurability[old.itemId] = old.durability; }
       G.player.equipment.syncToLegacy();
@@ -3860,7 +3896,7 @@ function useItem(id) {
       removeInventoryItem(id);
       if (old) addInventoryItem(old);
     }
-    addLog(`⚔️ 装备了${def.name}`, 'system');
+    addLog(`⚔️ 装备了${def.name}（主手）`, 'system');
     renderInventory();
     return;
   }
@@ -3883,27 +3919,27 @@ function useItem(id) {
     renderInventory();
     return;
   }
-  // Tool equip (fishing rod)
+  // Tool equip (fishing rod) -> 主手
   if (def.type === 'tool' && def.tool_type === 'fishing') {
     if (G.player) {
       const item = new EquipItem(id, def, def.grade, def.durability);
-      const old = G.player.equipment.equip(item, EquipSlot.ROD);
+      const old = G.player.equipment.equip(item, EquipSlot.LEFT_HAND);
       removeInventoryItem(id);
       if (old) addInventoryItem(old.itemId);
       G.player.equipment.syncToLegacy();
     } else {
       const old = G.equippedRod; G.equippedRod = id; removeInventoryItem(id); if (old) addInventoryItem(old);
     }
-    addLog(`🎣 装备了${def.name}`, 'system');
+    addLog(`🎣 装备了${def.name}（主手）`, 'system');
     renderInventory();
     return;
   }
-  // Equip gathering tools
+  // Equip gathering tools -> 主手
   if (def.type === 'tool' && (def.tool_type === 'axe' || def.tool_type === 'pickaxe' || def.tool_type === 'shovel')) {
     if (G.player) {
       const dur = G.toolDurability[id] != null ? G.toolDurability[id] : def.durability;
       const item = new EquipItem(id, def, def.grade, dur);
-      const old = G.player.equipment.equip(item, EquipSlot.TOOL);
+      const old = G.player.equipment.equip(item, EquipSlot.LEFT_HAND);
       removeInventoryItem(id);
       if (old) { addInventoryItem(old.itemId); G.toolDurability[old.itemId] = old.durability; }
       G.player.equipment.syncToLegacy();
@@ -3911,7 +3947,7 @@ function useItem(id) {
       const old = G.equippedTool; G.equippedTool = id; removeInventoryItem(id); if (old) addInventoryItem(old);
       if (!G.toolDurability[id] && def.durability) G.toolDurability[id] = def.durability;
     }
-    addLog(`🔧 装备了${def.name}`, 'system');
+    addLog(`🔧 装备了${def.name}（主手）`, 'system');
     renderInventory();
     return;
   }
@@ -4839,14 +4875,15 @@ function renderInventory() {
 
   html += '</div></div>';
 
-  // Equipped items section (v2: use Equipment class for display)
+  // Equipped items section (v2: body-part based equipment)
   const equipSlots = [
-    {slot:'weapon', eqSlot: EquipSlot.WEAPON, label:'武器', icon:'⚔️'},
-    {slot:'armor', eqSlot: EquipSlot.BODY, label:'护甲', icon:'🛡️'},
-    {slot:'head', eqSlot: EquipSlot.HEAD, label:'头盔', icon:'⛑️'},
-    {slot:'rod', eqSlot: EquipSlot.ROD, label:'钓竿', icon:'🎣'},
-    {slot:'tool', eqSlot: EquipSlot.TOOL, label:'工具', icon:'🔧'},
-    {slot:'bait', eqSlot: EquipSlot.BAIT, label:'钓饵', icon:'🪱'},
+    {eqSlot: EquipSlot.LEFT_HAND, label:'主手', icon:'🤚', desc:'武器/工具/钓竿'},
+    {eqSlot: EquipSlot.RIGHT_HAND, label:'副手', icon:'✋', desc:'武器/工具/盾牌'},
+    {eqSlot: EquipSlot.HEAD, label:'头部', icon:'👑', desc:'头盔/帽子'},
+    {eqSlot: EquipSlot.BODY, label:'身体', icon:'👕', desc:'护甲/衣服'},
+    {eqSlot: EquipSlot.BACK, label:'背部', icon:'🎒', desc:'背包/披风'},
+    {eqSlot: EquipSlot.ACCESSORY, label:'饰品', icon:'💍', desc:'戒指/项链'},
+    {eqSlot: EquipSlot.BAIT, label:'钓饵', icon:'🪱', desc:'钓鱼用'},
   ];
   let equipHtml = '';
   for (const es of equipSlots) {
@@ -4859,17 +4896,15 @@ function renderInventory() {
         if (item.maxDurability > 0) {
           const pct = Math.round(item.durability / item.maxDurability * 100);
           const color = pct > 60 ? 'var(--green)' : pct > 30 ? 'var(--yellow)' : 'var(--red)';
-          durHtml = ` <span style="color:${color};font-size:0.8em">[${item.durability}/${item.maxDurability}]</span>`;
+          durHtml = ` <span style="color:${color};font-size:0.8em">[${pct}%]</span>`;
         }
       }
-    } else {
-      const legacyId = G['equipped' + es.slot.charAt(0).toUpperCase() + es.slot.slice(1)];
-      if (legacyId) { itemName = getItemName(legacyId); }
     }
-    const canUnequip = G.player ? (G.player.equipment.slots[es.eqSlot] != null) : !!G['equipped' + es.slot.charAt(0).toUpperCase() + es.slot.slice(1)];
+    const canUnequip = G.player ? (G.player.equipment.slots[es.eqSlot] != null) : false;
     equipHtml += `
-      <div class="action-btn" onclick="${canUnequip ? `unequipItem('${es.slot}')` : ''}">
+      <div class="action-btn" onclick="${canUnequip ? `unequipItem('${es.eqSlot}')` : ''}" style="text-align:left">
         ${es.icon} ${es.label}：${itemName}${durHtml}
+        <div style="font-size:0.7em;color:var(--text2)">${es.desc}</div>
       </div>
     `;
   }
@@ -4885,10 +4920,12 @@ function renderInventory() {
 }
 
 function unequipItem(slot) {
-  // v2: Use Equipment class (matches Python engine._handle_unequip)
   const slotMap = {
-    weapon: EquipSlot.WEAPON, armor: EquipSlot.BODY, head: EquipSlot.HEAD,
-    rod: EquipSlot.ROD, tool: EquipSlot.TOOL, bait: EquipSlot.BAIT
+    left_hand: EquipSlot.LEFT_HAND, right_hand: EquipSlot.RIGHT_HAND,
+    head: EquipSlot.HEAD, body: EquipSlot.BODY, back: EquipSlot.BACK,
+    accessory: EquipSlot.ACCESSORY, bait: EquipSlot.BAIT,
+    // Legacy compat
+    weapon: EquipSlot.LEFT_HAND, armor: EquipSlot.BODY, rod: EquipSlot.LEFT_HAND, tool: EquipSlot.LEFT_HAND,
   };
   if (G.player) {
     const eqSlot = slotMap[slot];
