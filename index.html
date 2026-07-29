@@ -3890,6 +3890,119 @@ function discardItem(id) {
 }
 
 // ============================================================
+// EQUIP SLOT SELECTION MODAL
+// ============================================================
+function getValidSlots(itemDef) {
+  const slots = [];
+  if (!itemDef) return slots;
+  
+  if (itemDef.type === 'weapon') {
+    slots.push({slot: EquipSlot.LEFT_HAND, label:'主手', icon:'🤚'});
+    slots.push({slot: EquipSlot.RIGHT_HAND, label:'副手', icon:'✋'});
+  } else if (itemDef.type === 'armor') {
+    if (itemDef.slot === 'head') {
+      slots.push({slot: EquipSlot.HEAD, label:'头部', icon:'👑'});
+    } else {
+      slots.push({slot: EquipSlot.BODY, label:'身体', icon:'👕'});
+    }
+  } else if (itemDef.type === 'tool') {
+    if (itemDef.tool_type === 'fishing') {
+      slots.push({slot: EquipSlot.LEFT_HAND, label:'主手', icon:'🤚'});
+      slots.push({slot: EquipSlot.RIGHT_HAND, label:'副手', icon:'✋'});
+    } else if (itemDef.tool_type === 'axe' || itemDef.tool_type === 'pickaxe' || itemDef.tool_type === 'shovel') {
+      slots.push({slot: EquipSlot.LEFT_HAND, label:'主手', icon:'🤚'});
+      slots.push({slot: EquipSlot.RIGHT_HAND, label:'副手', icon:'✋'});
+    }
+  } else if (itemDef.type === 'bait') {
+    slots.push({slot: EquipSlot.BAIT, label:'钓饵', icon:'🪱'});
+  }
+  return slots;
+}
+
+function showEquipSlotModal(itemId, def) {
+  const validSlots = getValidSlots(def);
+  if (validSlots.length === 0) {
+    addLog('❌ 无法装备此物品', 'warning');
+    return;
+  }
+
+  // If only one valid slot, equip directly
+  if (validSlots.length === 1) {
+    doEquip(itemId, validSlots[0].slot);
+    return;
+  }
+
+  const overlay = document.getElementById('modal-overlay');
+  const box = document.getElementById('modal-box');
+  
+  let slotsHtml = '';
+  for (const s of validSlots) {
+    let currentItem = '空';
+    let durInfo = '';
+    if (G.player) {
+      const equipped = G.player.equipment.slots[s.slot];
+      if (equipped) {
+        currentItem = equipped.name;
+        if (equipped.maxDurability > 0) {
+          const pct = Math.round(equipped.durability / equipped.maxDurability * 100);
+          durInfo = ` <span style="font-size:0.8em;color:var(--text2)">[${pct}%]</span>`;
+        }
+      }
+    }
+    slotsHtml += `
+      <button class="action-btn" onclick="doEquip('${itemId}','${s.slot}');hideModal()" style="text-align:left;padding:12px">
+        ${s.icon} ${s.label}：${currentItem}${durInfo}
+      </button>
+    `;
+  }
+
+  box.innerHTML = `
+    <h3>装备 ${getItemIcon(itemId)} ${def.name}</h3>
+    <p style="color:var(--text2);margin:8px 0">选择装备位置：</p>
+    <div class="modal-actions" style="flex-direction:column">${slotsHtml}</div>
+    <div class="modal-actions"><button onclick="hideModal()" style="background:var(--bg3);color:var(--text)">取消</button></div>
+  `;
+  overlay.classList.add('active');
+}
+
+function doEquip(itemId, slot) {
+  const def = getItemDef(itemId);
+  if (!def) return;
+
+  if (G.player) {
+    const dur = G.toolDurability[itemId] != null ? G.toolDurability[itemId] : (def.durability || -1);
+    const item = new EquipItem(itemId, def, def.grade, dur);
+    const old = G.player.equipment.equip(item, slot);
+    removeInventoryItem(itemId);
+    if (old) {
+      addInventoryItem(old.itemId);
+      if (old.durability >= 0) G.toolDurability[old.itemId] = old.durability;
+    }
+    G.player.equipment.syncToLegacy();
+  } else {
+    // Legacy fallback
+    const slotMap = {
+      [EquipSlot.LEFT_HAND]: 'equippedWeapon',
+      [EquipSlot.RIGHT_HAND]: 'equippedWeapon',
+      [EquipSlot.HEAD]: 'equippedHead',
+      [EquipSlot.BODY]: 'equippedArmor',
+      [EquipSlot.BAIT]: 'equippedBait',
+    };
+    const key = slotMap[slot];
+    if (key) {
+      const old = G[key];
+      G[key] = itemId;
+      removeInventoryItem(itemId);
+      if (old) addInventoryItem(old);
+    }
+  }
+  
+  const slotNames = {left_hand:'主手',right_hand:'副手',head:'头部',body:'身体',back:'背部',accessory:'饰品',bait:'钓饵'};
+  addLog(`⚔️ 装备了${def.name}（${slotNames[slot]||slot}）`, 'system');
+  renderAll();
+}
+
+// ============================================================
 // USE ITEMS
 // ============================================================
 function useItem(id) {
@@ -3959,73 +4072,9 @@ function useItem(id) {
     return;
   }
   // v2: Equipment via Equipment class (body-part based)
-  if (def.type === 'weapon') {
-    if (G.player) {
-      const item = new EquipItem(id, def, def.grade, G.toolDurability[id] != null ? G.toolDurability[id] : def.durability);
-      // 武器默认装备到主手
-      const old = G.player.equipment.equip(item, EquipSlot.LEFT_HAND);
-      removeInventoryItem(id);
-      if (old) { addInventoryItem(old.itemId); G.toolDurability[old.itemId] = old.durability; }
-      G.player.equipment.syncToLegacy();
-    } else {
-      const old = G.equippedWeapon;
-      G.equippedWeapon = id;
-      removeInventoryItem(id);
-      if (old) addInventoryItem(old);
-    }
-    addLog(`⚔️ 装备了${def.name}（主手）`, 'system');
-    renderInventory();
-    return;
-  }
-  if (def.type === 'armor') {
-    const slot = def.slot === 'head' ? EquipSlot.HEAD : EquipSlot.BODY;
-    if (G.player) {
-      const item = new EquipItem(id, def, def.grade, G.toolDurability[id] != null ? G.toolDurability[id] : def.durability);
-      const old = G.player.equipment.equip(item, slot);
-      removeInventoryItem(id);
-      if (old) { addInventoryItem(old.itemId); G.toolDurability[old.itemId] = old.durability; }
-      G.player.equipment.syncToLegacy();
-    } else {
-      if (def.slot === 'head') {
-        const old = G.equippedHead; G.equippedHead = id; removeInventoryItem(id); if (old) addInventoryItem(old);
-      } else {
-        const old = G.equippedArmor; G.equippedArmor = id; removeInventoryItem(id); if (old) addInventoryItem(old);
-      }
-    }
-    addLog(`🛡️ 装备了${def.name}`, 'system');
-    renderInventory();
-    return;
-  }
-  // Tool equip (fishing rod) -> 主手
-  if (def.type === 'tool' && def.tool_type === 'fishing') {
-    if (G.player) {
-      const item = new EquipItem(id, def, def.grade, def.durability);
-      const old = G.player.equipment.equip(item, EquipSlot.LEFT_HAND);
-      removeInventoryItem(id);
-      if (old) addInventoryItem(old.itemId);
-      G.player.equipment.syncToLegacy();
-    } else {
-      const old = G.equippedRod; G.equippedRod = id; removeInventoryItem(id); if (old) addInventoryItem(old);
-    }
-    addLog(`🎣 装备了${def.name}（主手）`, 'system');
-    renderInventory();
-    return;
-  }
-  // Equip gathering tools -> 主手
-  if (def.type === 'tool' && (def.tool_type === 'axe' || def.tool_type === 'pickaxe' || def.tool_type === 'shovel')) {
-    if (G.player) {
-      const dur = G.toolDurability[id] != null ? G.toolDurability[id] : def.durability;
-      const item = new EquipItem(id, def, def.grade, dur);
-      const old = G.player.equipment.equip(item, EquipSlot.LEFT_HAND);
-      removeInventoryItem(id);
-      if (old) { addInventoryItem(old.itemId); G.toolDurability[old.itemId] = old.durability; }
-      G.player.equipment.syncToLegacy();
-    } else {
-      const old = G.equippedTool; G.equippedTool = id; removeInventoryItem(id); if (old) addInventoryItem(old);
-      if (!G.toolDurability[id] && def.durability) G.toolDurability[id] = def.durability;
-    }
-    addLog(`🔧 装备了${def.name}（主手）`, 'system');
-    renderInventory();
+  // Show slot selection modal for equippable items
+  if (def.type === 'weapon' || def.type === 'armor' || def.type === 'tool' || def.type === 'bait') {
+    showEquipSlotModal(id, def);
     return;
   }
   // Container: drink water from water_skin or water_bucket
@@ -4037,21 +4086,6 @@ function useItem(id) {
       renderAll();
       return;
     }
-  }
-  // Bait equip
-  if (def.type === 'bait' || GAME_DATA.items.baits[id]) {
-    if (G.player) {
-      const item = new EquipItem(id, def, def.grade, -1);
-      const old = G.player.equipment.equip(item, EquipSlot.BAIT);
-      removeInventoryItem(id);
-      if (old) addInventoryItem(old.itemId);
-      G.player.equipment.syncToLegacy();
-    } else {
-      const old = G.equippedBait; G.equippedBait = id; removeInventoryItem(id); if (old) addInventoryItem(old);
-    }
-    addLog(`🪱 装备了${def.name}作为钓饵`, 'system');
-    renderInventory();
-    return;
   }
 
   addLog(`❓ 不知道如何使用${def.name}`, 'warning');
